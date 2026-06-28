@@ -1,5 +1,6 @@
 package com.matrimonial.service;
 
+import com.matrimonial.dto.response.PhotoDto;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.*;
 import com.matrimonial.exception.ResourceNotFoundException;
@@ -87,12 +88,20 @@ public class DiscoverService {
     /**
      * Build ProfileResponse DTO from a Profile entity.
      * Loads photos for each profile.
+     *
+     * CHANGE: Now maps each photo to PhotoDto (photoId + photoUrl + isPrimary)
+     *   so the caller can identify each photo by its DB id.
      */
     private ProfileResponse buildProfileResponse(Profile profile) {
         List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
 
-        List<String> photoUrls = photos.stream()
-                .map(ProfilePhoto::getPhotoUrl)
+        // Map each photo entity to PhotoDto — carries DB id for delete operations
+        List<PhotoDto> photoDtos = photos.stream()
+                .map(photo -> PhotoDto.builder()
+                        .photoId(photo.getId())
+                        .photoUrl(photo.getPhotoUrl())
+                        .isPrimary(photo.getIsPrimary())
+                        .build())
                 .collect(Collectors.toList());
 
         String primaryPhotoUrl = photos.stream()
@@ -113,7 +122,7 @@ public class DiscoverService {
                 .religion(profile.getReligion())
                 .hobbies(profile.getHobbies())
                 .isComplete(profile.getIsComplete())
-                .photoUrls(photoUrls)
+                .photos(photoDtos)
                 .primaryPhotoUrl(primaryPhotoUrl)
                 .build();
     }

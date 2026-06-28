@@ -2,6 +2,7 @@ package com.matrimonial.service;
 
 import com.matrimonial.dto.request.PreferenceRequest;
 import com.matrimonial.dto.request.ProfileRequest;
+import com.matrimonial.dto.response.PhotoDto;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.*;
 import com.matrimonial.exception.BadRequestException;
@@ -169,6 +170,8 @@ public class ProfileService {
         }
 
         String photoUrl = saveFileLocally(file, user.getId());
+
+        // First photo uploaded is automatically set as primary
         boolean isPrimary = (currentPhotoCount == 0);
 
         ProfilePhoto photo = ProfilePhoto.builder()
@@ -182,32 +185,41 @@ public class ProfileService {
     }
 
     /**
-     * Delete a photo from the logged-in user's profile.
+     * Delete a specific photo from the logged-in user's profile.
      *
      * Business rules:
-     *   - User can only delete their own photos
-     *   - If primary photo is deleted, first remaining photo becomes primary
+     *   - photoId is the DB primary key from profile_photos table
+     *   - User can only delete their own photos (ownership check)
+     *   - Physical file is deleted from disk first, then DB record is removed
+     *   - If the deleted photo was primary, the next remaining photo becomes primary
      */
     @Transactional
     public void deletePhoto(String email, Long photoId) {
 
         User user = getUserByEmail(email);
 
+        // Find the photo by its DB id — this is the id from PhotoDto.photoId
         ProfilePhoto photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Photo not found."));
 
+        // Load the logged-in user's profile to verify ownership
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found."));
 
+        // Security check: make sure this photo belongs to the logged-in user
         if (!photo.getProfile().getId().equals(profile.getId())) {
             throw new UnauthorizedException("You are not allowed to delete this photo.");
         }
 
         boolean wasPrimary = photo.getIsPrimary();
+
+        // Step 1: Delete physical file from disk
         deleteFileFromDisk(photo.getPhotoUrl());
+
+        // Step 2: Remove the DB record
         photoRepository.delete(photo);
 
-        // If deleted photo was primary, promote the next photo
+        // Step 3: If deleted photo was primary, promote the next remaining photo
         if (wasPrimary) {
             List<ProfilePhoto> remaining = photoRepository.findByProfileId(profile.getId());
             if (!remaining.isEmpty()) {
@@ -294,6 +306,8 @@ public class ProfileService {
     /**
      * Save uploaded file to local disk.
      * Returns the relative URL path to store in DB.
+     *
+     * Path format saved: /uploads/photos/{userId}/{uuid}.{ext}
      */
     private String saveFileLocally(MultipartFile file, Long userId) throws IOException {
         Path uploadPath = Paths.get(uploadDir + File.separator + userId);
@@ -314,11 +328,12 @@ public class ProfileService {
     /**
      * Delete a photo file from local disk.
      * Silently ignores if file does not exist.
+     *
+     * photoUrl format: /uploads/photos/{userId}/{filename}
+     * Strip the leading slash to resolve as a relative path from project root.
      */
     private void deleteFileFromDisk(String photoUrl) {
         try {
-            // photoUrl format: /uploads/photos/{userId}/{filename}
-            // Strip leading slash to get relative path
             String relativePath = photoUrl.startsWith("/") ? photoUrl.substring(1) : photoUrl;
             Path filePath = Paths.get(relativePath);
             Files.deleteIfExists(filePath);
@@ -330,15 +345,24 @@ public class ProfileService {
 
     /**
      * Build a ProfileResponse DTO from a Profile entity.
-     * Extracts photo URLs and primary photo URL.
+     *
+     * CHANGE: Now maps each ProfilePhoto → PhotoDto (with photoId, photoUrl, isPrimary)
+     *   instead of just extracting the URL string.
+     *   This allows callers to see the DB id of each photo for delete operations.
      */
     private ProfileResponse buildProfileResponse(Profile profile) {
         List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
 
-        List<String> photoUrls = photos.stream()
-                .map(ProfilePhoto::getPhotoUrl)
+        // Map each photo entity to a PhotoDto carrying id + url + isPrimary
+        List<PhotoDto> photoDtos = photos.stream()
+                .map(photo -> PhotoDto.builder()
+                        .photoId(photo.getId())       // DB id — use this in DELETE /api/profile/photos/{photoId}
+                        .photoUrl(photo.getPhotoUrl())
+                        .isPrimary(photo.getIsPrimary())
+                        .build())
                 .collect(Collectors.toList());
 
+        // Extract just the primary photo URL for quick frontend access
         String primaryPhotoUrl = photos.stream()
                 .filter(ProfilePhoto::getIsPrimary)
                 .map(ProfilePhoto::getPhotoUrl)
@@ -357,7 +381,7 @@ public class ProfileService {
                 .religion(profile.getReligion())
                 .hobbies(profile.getHobbies())
                 .isComplete(profile.getIsComplete())
-                .photoUrls(photoUrls)
+                .photos(photoDtos)           // List of PhotoDto (with photoId)
                 .primaryPhotoUrl(primaryPhotoUrl)
                 .build();
     }

@@ -17,6 +17,11 @@ import java.util.List;
  * For the "who liked me" safe view, use LikerSafeView instead
  * (which strips out email/contact info).
  *
+ * CHANGE: Replaced List<String> photoUrls with List<PhotoDto> photos.
+ *   Each PhotoDto now carries photoId + photoUrl + isPrimary.
+ *   This lets the caller know the exact DB id to use when deleting a photo.
+ *   primaryPhotoUrl is kept for quick access to the cover photo URL.
+ *
  * Layer: DTO (data transfer only, no logic)
  */
 @Data
@@ -37,9 +42,10 @@ public class ProfileResponse {
     private String hobbies;
     private Boolean isComplete;
 
-    // List of photo URLs to display
-    private List<String> photoUrls;
+    // List of photos — each item has photoId, photoUrl, isPrimary
+    // Use photoId from here to call DELETE /api/profile/photos/{photoId}
+    private List<PhotoDto> photos;
 
-    // Which photo is the primary/cover photo
+    // Quick access to the primary/cover photo URL (null if no photos)
     private String primaryPhotoUrl;
 }
