@@ -23,12 +23,15 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     /**
      * Count how many likes the sender has sent TODAY.
      * Used to enforce the 3-likes-per-day free limit.
-     *
-     * @param senderId  the user who is sending likes
-     * @param startOfDay  midnight of today (likes before this don't count)
      */
     int countBySenderIdAndLikedAtAfter(Long senderId, LocalDateTime startOfDay);
 
     // Get all likes received by a user — shown in "Who liked me?" section
     List<Like> findByReceiverId(Long receiverId);
+
+    // Delete all likes sent BY this user — used in account deletion
+    void deleteBySenderId(Long senderId);
+
+    // Delete all likes received BY this user — used in account deletion
+    void deleteByReceiverId(Long receiverId);
 }

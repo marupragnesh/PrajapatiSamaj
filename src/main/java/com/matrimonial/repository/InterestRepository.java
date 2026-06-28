@@ -29,14 +29,18 @@ public interface InterestRepository extends JpaRepository<InterestRequest, Long>
     // All interest requests received by a user (to show Accept/Decline screen)
     List<InterestRequest> findByReceiverIdAndStatus(Long receiverId, Status status);
 
+    // Delete all interest requests sent BY this user — used in account deletion
+    void deleteBySenderId(Long senderId);
+
+    // Delete all interest requests received BY this user — used in account deletion
+    void deleteByReceiverId(Long receiverId);
+
     /**
      * Find MUTUAL matches — users who have ACCEPTED each other's interest.
      *
      * A mutual match exists when:
      *   User A sent interest to User B (ACCEPTED)
      *   AND User B also sent interest to User A (ACCEPTED)
-     *
-     * This query finds all users with whom the current user has mutual acceptance.
      */
     @Query("""
         SELECT ir FROM InterestRequest ir

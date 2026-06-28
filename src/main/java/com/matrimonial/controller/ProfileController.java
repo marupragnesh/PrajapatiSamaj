@@ -30,8 +30,7 @@ import java.io.IOException;
  *   GET    /api/preferences              - Get partner preference
  *   PUT    /api/preferences              - Update partner preference
  *   GET    /api/profiles/{id}            - View another user's profile
- *
- * @AuthenticationPrincipal: Spring Security injects the logged-in user automatically.
+ *   DELETE /api/account                  - Permanently delete account
  *
  * Layer: Controller (HTTP in/out only — no business logic)
  */
@@ -41,9 +40,7 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
-    /**
-     * Get the logged-in user's own profile.
-     */
+    /** Get the logged-in user's own profile. */
     @GetMapping("/api/profile/me")
     public ResponseEntity<ProfileResponse> getMyProfile(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -52,9 +49,7 @@ public class ProfileController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Create a new profile (only allowed once per user).
-     */
+    /** Create a new profile (only allowed once per user). */
     @PostMapping("/api/profile")
     public ResponseEntity<ProfileResponse> createProfile(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -64,9 +59,7 @@ public class ProfileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Update existing profile details.
-     */
+    /** Update existing profile details. */
     @PutMapping("/api/profile")
     public ResponseEntity<ProfileResponse> updateProfile(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -78,7 +71,7 @@ public class ProfileController {
 
     /**
      * Upload a photo to the user's profile.
-     * Accepts multipart/form-data with a file field named "photo".
+     * Accepts multipart/form-data with field name "photo".
      * Maximum 5 photos per profile (enforced in service).
      */
     @PostMapping(value = "/api/profile/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -90,22 +83,17 @@ public class ProfileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Delete a specific photo by its ID.
-     * User can only delete their own photos (enforced in service).
-     */
+    /** Delete a specific photo by its ID. User can only delete their own photos. */
     @DeleteMapping("/api/profile/photos/{photoId}")
     public ResponseEntity<ApiResponse> deletePhoto(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long photoId) throws IOException {
+            @PathVariable Long photoId) {
 
         profileService.deletePhoto(userDetails.getUsername(), photoId);
         return ResponseEntity.ok(ApiResponse.success("Photo deleted successfully."));
     }
 
-    /**
-     * Get partner preference for the logged-in user.
-     */
+    /** Get partner preference for the logged-in user. */
     @GetMapping("/api/preferences")
     public ResponseEntity<PartnerPreference> getPreference(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -114,9 +102,7 @@ public class ProfileController {
         return ResponseEntity.ok(preference);
     }
 
-    /**
-     * Set or update partner preference (what gender to see in discovery).
-     */
+    /** Set or update partner preference (what gender to see in discovery). */
     @PutMapping("/api/preferences")
     public ResponseEntity<PartnerPreference> updatePreference(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -126,13 +112,27 @@ public class ProfileController {
         return ResponseEntity.ok(preference);
     }
 
-    /**
-     * View another user's profile by profile ID.
-     * Only complete profiles are visible (enforced in service).
-     */
+    /** View another user's profile by profile ID. Only complete profiles are visible. */
     @GetMapping("/api/profiles/{profileId}")
     public ResponseEntity<ProfileResponse> getProfileById(@PathVariable Long profileId) {
         ProfileResponse response = profileService.getProfileById(profileId);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Permanently delete the logged-in user's account.
+     *
+     * Deletes in order:
+     *   photos (disk + DB) → likes → interests → preference → profile → user
+     *
+     * This action is IRREVERSIBLE.
+     * Phase 2: goodbye email will be sent before deletion.
+     */
+    @DeleteMapping("/api/account")
+    public ResponseEntity<ApiResponse> deleteAccount(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        profileService.deleteAccount(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Your account has been permanently deleted."));
     }
 }
