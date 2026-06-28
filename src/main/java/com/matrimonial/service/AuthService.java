@@ -8,11 +8,17 @@ import com.matrimonial.exception.ResourceNotFoundException;
 import com.matrimonial.repository.UserRepository;
 import com.matrimonial.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * SERVICE: AuthService
@@ -71,6 +77,7 @@ public class AuthService {
                 .message("Registration successful! Please complete your profile.")
                 .build();
     }
+
 
     /**
      * Login with email + password.
