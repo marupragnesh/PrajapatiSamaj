@@ -19,6 +19,7 @@
 | Password | BCrypt (strength 12) |
 | Email | JavaMailSender (SMTP / Gmail) |
 | File Storage | Local disk (Phase 2: AWS S3) |
+| Frontend | React + Vite (port 5173) — D:\Projects\PrajapatiSamajFrontEnd |
 | Phase 1 | Core platform — NO payment |
 | Phase 2 | Premium plans, filters, contact reveal, payment |
 
@@ -42,7 +43,7 @@ com.matrimonial
 │   ├── request/     RegisterRequest, LoginRequest, ForgotPasswordRequest
 │   │                VerifyOtpRequest, ResetPasswordRequest
 │   │                ProfileRequest, PreferenceRequest
-│   └── response/    ApiResponse, AuthResponse, ProfileResponse
+│   └── response/    ApiResponse, AuthResponse, ProfileResponse, PhotoDto
 │                    LikerSafeView, MatchResponse, InterestResponse
 ├── exception/       GlobalExceptionHandler, BadRequestException
 │                    ResourceNotFoundException, UnauthorizedException
@@ -79,7 +80,8 @@ com.matrimonial
 | 22 | Circular dependency fix | ✅ Done | CustomUserDetailsService |
 | 23 | CORS config | ✅ Done | Allows http://localhost:5173 |
 | 24 | Delete Account (full) | ✅ Done | DELETE /api/account |
-| 25 | Admin Panel | ❌ Pending | |
+| 25 | Photo instant preview on upload | ✅ Done | Frontend only fix |
+| 26 | Admin Panel | ❌ Pending | |
 
 ---
 
@@ -136,6 +138,7 @@ com.matrimonial
 | 2026-06-27 | Circular dependency JwtAuthFilter ↔ SecurityConfig | Extracted CustomUserDetailsService |
 | 2026-06-28 | /api/interests/received returned broken JSON | Created InterestResponse DTO, fixed lazy loading |
 | 2026-06-28 | CORS blocking browser requests from Vite | Added CorsConfigurationSource bean in SecurityConfig |
+| 2026-06-28 | Photo not visible during upload / no instant preview | Added local object URL preview in PhotoUpload.jsx; fixed compressed Blob filename |
 
 ---
 
@@ -144,11 +147,10 @@ com.matrimonial
 | # | Issue | Priority |
 |---|---|---|
 | 1 | Matches bug — always picks receiver as matched person | 🟠 Fix before frontend uses /matches |
-| 2 | photoUrls is List<String> — no photo ID for delete UI | 🟠 Fix before frontend photo delete |
-| 3 | Duplicate buildProfileResponse() in ProfileService & DiscoverService | 🟡 Code quality — before Phase 2 |
-| 4 | deletePhoto throws IOException unnecessarily | 🟡 Minor cleanup |
-| 5 | Photo MIME type spoofable | 🟡 Low risk Phase 1 |
-| 6 | Goodbye email on account delete | 🔵 Phase 2 |
+| 2 | Duplicate buildProfileResponse() in ProfileService & DiscoverService | 🟡 Code quality — before Phase 2 |
+| 3 | deletePhoto throws IOException unnecessarily | 🟡 Minor cleanup |
+| 4 | Photo MIME type spoofable | 🟡 Low risk Phase 1 |
+| 5 | Goodbye email on account delete | 🔵 Phase 2 |
 
 ---
 
@@ -175,6 +177,7 @@ com.matrimonial
 | 2026-06-28 | Fixed /interests/received lazy loading bug — InterestResponse DTO |
 | 2026-06-28 | Added CORS config for Vite (localhost:5173) |
 | 2026-06-28 | Implemented full account deletion — DELETE /api/account |
+| 2026-06-28 | Fixed photo instant preview on upload — PhotoUpload.jsx (frontend only, no backend change) |
 
 ---
 
@@ -182,7 +185,6 @@ com.matrimonial
 
 **Priority order:**
 1. Fix Matches bug (receiver vs sender logic) — needed before frontend uses /matches
-2. Fix photoUrls to include photo ID — needed before frontend photo delete works
-3. Admin Panel (list users, deactivate accounts)
+2. Admin Panel (list users, deactivate accounts)
 
 After Admin Panel → Phase 1 complete → Phase 2 planning.

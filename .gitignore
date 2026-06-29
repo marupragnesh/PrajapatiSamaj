@@ -8,8 +8,6 @@ dist/
 .env
 .env.*
 
-# Java/Maven build
-target/
 
 
 # Logs
