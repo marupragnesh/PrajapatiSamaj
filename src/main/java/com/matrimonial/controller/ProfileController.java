@@ -1,8 +1,10 @@
 package com.matrimonial.controller;
 
+import com.matrimonial.dto.request.ExpectationRequest;
 import com.matrimonial.dto.request.PreferenceRequest;
 import com.matrimonial.dto.request.ProfileRequest;
 import com.matrimonial.dto.response.ApiResponse;
+import com.matrimonial.dto.response.ExpectationResponse;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.PartnerPreference;
 import com.matrimonial.service.ProfileService;
@@ -22,15 +24,18 @@ import java.io.IOException;
  * CONTROLLER: ProfileController
  *
  * Handles all profile-related HTTP endpoints:
- *   GET    /api/profile/me               - Get own profile
- *   POST   /api/profile                  - Create profile
- *   PUT    /api/profile                  - Update profile
- *   POST   /api/profile/photos           - Upload a photo
- *   DELETE /api/profile/photos/{id}      - Delete a photo
- *   GET    /api/preferences              - Get partner preference
- *   PUT    /api/preferences              - Update partner preference
- *   GET    /api/profiles/{id}            - View another user's profile
- *   DELETE /api/account                  - Permanently delete account
+ *   GET    /api/profile/me                      - Get own profile
+ *   POST   /api/profile                         - Create profile
+ *   PUT    /api/profile                         - Update profile
+ *   POST   /api/profile/photos                  - Upload a photo
+ *   DELETE /api/profile/photos/{id}             - Delete a photo
+ *   PUT    /api/profile/photos/{id}/primary     - Set photo as primary
+ *   GET    /api/profile/expectations            - Get partner expectations
+ *   PUT    /api/profile/expectations            - Save partner expectations
+ *   GET    /api/preferences                     - Get partner preference
+ *   PUT    /api/preferences                     - Update partner preference
+ *   GET    /api/profiles/{id}                   - View another user's profile
+ *   DELETE /api/account                         - Permanently delete account
  *
  * Layer: Controller (HTTP in/out only — no business logic)
  */
@@ -39,6 +44,8 @@ import java.io.IOException;
 public class ProfileController {
 
     private final ProfileService profileService;
+
+    // ===== Profile =====
 
     /** Get the logged-in user's own profile. */
     @GetMapping("/api/profile/me")
@@ -49,7 +56,7 @@ public class ProfileController {
         return ResponseEntity.ok(response);
     }
 
-    /** Create a new profile (only allowed once per user). */
+    /** Create a new profile — only allowed once per user. */
     @PostMapping("/api/profile")
     public ResponseEntity<ProfileResponse> createProfile(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -69,10 +76,11 @@ public class ProfileController {
         return ResponseEntity.ok(response);
     }
 
+    // ===== Photos =====
+
     /**
-     * Upload a photo to the user's profile.
-     * Accepts multipart/form-data with field name "photo".
-     * Maximum 5 photos per profile (enforced in service).
+     * Upload a photo — multipart/form-data, field name "photo".
+     * Max 5 photos per profile (enforced in service).
      */
     @PostMapping(value = "/api/profile/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProfileResponse> uploadPhoto(
@@ -83,7 +91,7 @@ public class ProfileController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /** Delete a specific photo by its ID. User can only delete their own photos. */
+    /** Delete a specific photo by its numeric ID. User can only delete their own photos. */
     @DeleteMapping("/api/profile/photos/{photoId}")
     public ResponseEntity<ApiResponse> deletePhoto(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -93,7 +101,49 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success("Photo deleted successfully."));
     }
 
-    /** Get partner preference for the logged-in user. */
+    /**
+     * Set a specific photo as the primary (profile picture).
+     * Clears isPrimary on all other photos for this profile.
+     */
+    @PutMapping("/api/profile/photos/{photoId}/primary")
+    public ResponseEntity<ProfileResponse> setPrimaryPhoto(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long photoId) {
+
+        ProfileResponse response = profileService.setPrimaryPhoto(userDetails.getUsername(), photoId);
+        return ResponseEntity.ok(response);
+    }
+
+    // ===== Expectations =====
+
+    /**
+     * Get the logged-in user's partner expectations.
+     * Returns empty object (all nulls) if not yet filled in.
+     */
+    @GetMapping("/api/profile/expectations")
+    public ResponseEntity<ExpectationResponse> getMyExpectations(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        ExpectationResponse response = profileService.getMyExpectations(userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Save or update partner expectations — upsert (creates if not exists).
+     * All fields are optional — user can fill any combination.
+     */
+    @PutMapping("/api/profile/expectations")
+    public ResponseEntity<ExpectationResponse> saveExpectations(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody ExpectationRequest request) {
+
+        ExpectationResponse response = profileService.saveExpectations(userDetails.getUsername(), request);
+        return ResponseEntity.ok(response);
+    }
+
+    // ===== Partner Preference =====
+
+    /** Get partner preference (which gender to show in discover page). */
     @GetMapping("/api/preferences")
     public ResponseEntity<PartnerPreference> getPreference(
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -102,7 +152,7 @@ public class ProfileController {
         return ResponseEntity.ok(preference);
     }
 
-    /** Set or update partner preference (what gender to see in discovery). */
+    /** Set or update partner preference. */
     @PutMapping("/api/preferences")
     public ResponseEntity<PartnerPreference> updatePreference(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -112,6 +162,8 @@ public class ProfileController {
         return ResponseEntity.ok(preference);
     }
 
+    // ===== Other Users =====
+
     /** View another user's profile by profile ID. Only complete profiles are visible. */
     @GetMapping("/api/profiles/{profileId}")
     public ResponseEntity<ProfileResponse> getProfileById(@PathVariable Long profileId) {
@@ -119,14 +171,12 @@ public class ProfileController {
         return ResponseEntity.ok(response);
     }
 
+    // ===== Account =====
+
     /**
      * Permanently delete the logged-in user's account.
-     *
-     * Deletes in order:
-     *   photos (disk + DB) → likes → interests → preference → profile → user
-     *
+     * Deletion order: photos (disk + DB) → likes → interests → preference → expectations → profile → user.
      * This action is IRREVERSIBLE.
-     * Phase 2: goodbye email will be sent before deletion.
      */
     @DeleteMapping("/api/account")
     public ResponseEntity<ApiResponse> deleteAccount(

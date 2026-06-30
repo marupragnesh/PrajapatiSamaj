@@ -1,7 +1,9 @@
 package com.matrimonial.service;
 
+import com.matrimonial.dto.request.ExpectationRequest;
 import com.matrimonial.dto.request.PreferenceRequest;
 import com.matrimonial.dto.request.ProfileRequest;
+import com.matrimonial.dto.response.ExpectationResponse;
 import com.matrimonial.dto.response.PhotoDto;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.*;
@@ -28,10 +30,12 @@ import java.util.stream.Collectors;
  * SERVICE: ProfileService
  *
  * Handles all profile-related business logic:
- *   - Create / Update / Delete profile and account
- *   - Upload / Delete photos (max 5)
+ *   - Create / Update profile (including new fields: maritalStatus, height, income, gotra, diet)
+ *   - Upload / Delete / Set Primary photo
  *   - Get / Update partner preferences
+ *   - Get / Save expectations (all fields including new ones)
  *   - View own profile and other profiles
+ *   - Delete account
  *
  * Layer: Service (all business logic lives here)
  */
@@ -42,30 +46,23 @@ public class ProfileService {
     private final ProfileRepository profileRepository;
     private final PhotoRepository photoRepository;
     private final PartnerPreferenceRepository preferenceRepository;
+    private final ExpectationRepository expectationRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final InterestRepository interestRepository;
 
-    // Local folder path for storing photos (from application.properties)
     @Value("${file.upload.dir}")
     private String uploadDir;
 
-    // Maximum number of photos allowed per profile
     private static final int MAX_PHOTOS = 5;
 
-    /**
-     * Create a new profile for the logged-in user.
-     *
-     * Business rules:
-     *   - A user can only have ONE profile
-     *   - All required fields must be provided
-     */
+    // ===== Profile CRUD =====
+
+    /** Create a new profile for the logged-in user (only once per user). */
     @Transactional
     public ProfileResponse createProfile(String email, ProfileRequest request) {
-
         User user = getUserByEmail(email);
 
-        // Prevent creating duplicate profiles
         if (profileRepository.existsByUserId(user.getId())) {
             throw new BadRequestException("Profile already exists. Use update instead.");
         }
@@ -75,28 +72,25 @@ public class ProfileService {
                 .fullName(request.getFullName())
                 .age(request.getAge())
                 .gender(request.getGender())
+                .maritalStatus(request.getMaritalStatus())
                 .city(request.getCity())
                 .education(request.getEducation())
                 .profession(request.getProfession())
+                .height(request.getHeight())
+                .income(request.getIncome())
+                .gotra(request.getGotra())
+                .diet(request.getDiet())
                 .religion(request.getReligion())
                 .hobbies(request.getHobbies())
                 .isComplete(true)
                 .build();
 
-        Profile savedProfile = profileRepository.save(profile);
-        return buildProfileResponse(savedProfile);
+        return buildProfileResponse(profileRepository.save(profile));
     }
 
-    /**
-     * Update an existing profile.
-     *
-     * Business rules:
-     *   - Profile must already exist
-     *   - User can only update their own profile
-     */
+    /** Update an existing profile. */
     @Transactional
     public ProfileResponse updateProfile(String email, ProfileRequest request) {
-
         User user = getUserByEmail(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
@@ -105,20 +99,22 @@ public class ProfileService {
         profile.setFullName(request.getFullName());
         profile.setAge(request.getAge());
         profile.setGender(request.getGender());
+        profile.setMaritalStatus(request.getMaritalStatus());
         profile.setCity(request.getCity());
         profile.setEducation(request.getEducation());
         profile.setProfession(request.getProfession());
+        profile.setHeight(request.getHeight());
+        profile.setIncome(request.getIncome());
+        profile.setGotra(request.getGotra());
+        profile.setDiet(request.getDiet());
         profile.setReligion(request.getReligion());
         profile.setHobbies(request.getHobbies());
         profile.setIsComplete(true);
 
-        Profile updatedProfile = profileRepository.save(profile);
-        return buildProfileResponse(updatedProfile);
+        return buildProfileResponse(profileRepository.save(profile));
     }
 
-    /**
-     * Get the logged-in user's own profile.
-     */
+    /** Get the logged-in user's own profile. */
     public ProfileResponse getMyProfile(String email) {
         User user = getUserByEmail(email);
 
@@ -128,10 +124,7 @@ public class ProfileService {
         return buildProfileResponse(profile);
     }
 
-    /**
-     * Get another user's profile by profile ID.
-     * Only complete profiles are visible.
-     */
+    /** Get another user's profile by profile ID (only complete profiles). */
     public ProfileResponse getProfileById(Long profileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found."));
@@ -143,17 +136,14 @@ public class ProfileService {
         return buildProfileResponse(profile);
     }
 
+    // ===== Photos =====
+
     /**
      * Upload a photo to the logged-in user's profile.
-     *
-     * Business rules:
-     *   - Maximum 5 photos per profile
-     *   - Only image files allowed (jpg, jpeg, png)
-     *   - First photo uploaded becomes the primary photo
+     * First photo is automatically set as primary.
      */
     @Transactional
     public ProfileResponse uploadPhoto(String email, MultipartFile file) throws IOException {
-
         User user = getUserByEmail(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
@@ -171,7 +161,7 @@ public class ProfileService {
 
         String photoUrl = saveFileLocally(file, user.getId());
 
-        // First photo uploaded is automatically set as primary
+        // First photo uploaded is automatically primary
         boolean isPrimary = (currentPhotoCount == 0);
 
         ProfilePhoto photo = ProfilePhoto.builder()
@@ -186,40 +176,28 @@ public class ProfileService {
 
     /**
      * Delete a specific photo from the logged-in user's profile.
-     *
-     * Business rules:
-     *   - photoId is the DB primary key from profile_photos table
-     *   - User can only delete their own photos (ownership check)
-     *   - Physical file is deleted from disk first, then DB record is removed
-     *   - If the deleted photo was primary, the next remaining photo becomes primary
+     * If deleted photo was primary → next remaining photo becomes primary.
      */
     @Transactional
     public void deletePhoto(String email, Long photoId) {
-
         User user = getUserByEmail(email);
 
-        // Find the photo by its DB id — this is the id from PhotoDto.photoId
         ProfilePhoto photo = photoRepository.findById(photoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Photo not found."));
 
-        // Load the logged-in user's profile to verify ownership
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found."));
 
-        // Security check: make sure this photo belongs to the logged-in user
         if (!photo.getProfile().getId().equals(profile.getId())) {
             throw new UnauthorizedException("You are not allowed to delete this photo.");
         }
 
         boolean wasPrimary = photo.getIsPrimary();
 
-        // Step 1: Delete physical file from disk
         deleteFileFromDisk(photo.getPhotoUrl());
-
-        // Step 2: Remove the DB record
         photoRepository.delete(photo);
 
-        // Step 3: If deleted photo was primary, promote the next remaining photo
+        // Promote next photo to primary if deleted one was primary
         if (wasPrimary) {
             List<ProfilePhoto> remaining = photoRepository.findByProfileId(profile.getId());
             if (!remaining.isEmpty()) {
@@ -230,54 +208,81 @@ public class ProfileService {
     }
 
     /**
-     * Delete the logged-in user's account permanently.
-     *
-     * Deletion order (respects foreign key constraints):
-     *   1. Delete all photo files from disk + DB records
-     *   2. Delete all likes sent and received
-     *   3. Delete all interest requests sent and received
-     *   4. Delete partner preference
-     *   5. Delete profile
-     *   6. Delete user account
-     *
-     * Phase 2: Send goodbye email before deletion.
+     * Set a specific photo as the primary (profile picture).
+     * Clears isPrimary on all other photos for this profile first.
      */
     @Transactional
-    public void deleteAccount(String email) {
-
+    public ProfileResponse setPrimaryPhoto(String email, Long photoId) {
         User user = getUserByEmail(email);
 
-        // Step 1 — Delete photos from disk and DB
-        profileRepository.findByUserId(user.getId()).ifPresent(profile -> {
-            List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
-            for (ProfilePhoto photo : photos) {
-                deleteFileFromDisk(photo.getPhotoUrl());
+        ProfilePhoto photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Photo not found."));
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found."));
+
+        if (!photo.getProfile().getId().equals(profile.getId())) {
+            throw new UnauthorizedException("You are not allowed to modify this photo.");
+        }
+
+        // Unset primary on all photos for this profile
+        List<ProfilePhoto> allPhotos = photoRepository.findByProfileId(profile.getId());
+        for (ProfilePhoto p : allPhotos) {
+            if (p.getIsPrimary()) {
+                p.setIsPrimary(false);
+                photoRepository.save(p);
             }
-            photoRepository.deleteAll(photos);
+        }
 
-            // Step 5 — Delete profile
-            profileRepository.delete(profile);
-        });
+        photo.setIsPrimary(true);
+        photoRepository.save(photo);
 
-        // Step 2 — Delete all likes sent and received
-        likeRepository.deleteBySenderId(user.getId());
-        likeRepository.deleteByReceiverId(user.getId());
+        return buildProfileResponse(profileRepository.findById(profile.getId()).get());
+    }
 
-        // Step 3 — Delete all interest requests sent and received
-        interestRepository.deleteBySenderId(user.getId());
-        interestRepository.deleteByReceiverId(user.getId());
+    // ===== Expectations =====
 
-        // Step 4 — Delete partner preference
-        preferenceRepository.findByUserId(user.getId())
-                .ifPresent(preferenceRepository::delete);
-
-        // Step 6 — Delete user account
-        userRepository.delete(user);
+    /**
+     * Get expectations for the logged-in user.
+     * Returns empty response (all nulls) if not yet filled.
+     */
+    public ExpectationResponse getMyExpectations(String email) {
+        User user = getUserByEmail(email);
+        return expectationRepository.findByUserId(user.getId())
+                .map(this::buildExpectationResponse)
+                .orElse(new ExpectationResponse());
     }
 
     /**
-     * Get partner preference for the logged-in user.
+     * Save or update partner expectations.
+     * Upsert: creates if not exists, updates if exists.
      */
+    @Transactional
+    public ExpectationResponse saveExpectations(String email, ExpectationRequest request) {
+        User user = getUserByEmail(email);
+
+        Expectation expectation = expectationRepository.findByUserId(user.getId())
+                .orElse(Expectation.builder().user(user).build());
+
+        expectation.setMinAge(request.getMinAge());
+        expectation.setMaxAge(request.getMaxAge());
+        expectation.setPreferredMaritalStatus(request.getPreferredMaritalStatus());
+        expectation.setPreferredMinHeight(request.getPreferredMinHeight());
+        expectation.setPreferredMaxHeight(request.getPreferredMaxHeight());
+        expectation.setPreferredCity(request.getPreferredCity());
+        expectation.setPreferredEducation(request.getPreferredEducation());
+        expectation.setPreferredProfession(request.getPreferredProfession());
+        expectation.setPreferredIncome(request.getPreferredIncome());
+        expectation.setPreferredGotra(request.getPreferredGotra());
+        expectation.setPreferredDiet(request.getPreferredDiet());
+        expectation.setPreferredReligion(request.getPreferredReligion());
+        expectation.setAboutExpectations(request.getAboutExpectations());
+
+        return buildExpectationResponse(expectationRepository.save(expectation));
+    }
+
+    // ===== Preferences =====
+
     public PartnerPreference getPreference(String email) {
         User user = getUserByEmail(email);
         return preferenceRepository.findByUserId(user.getId())
@@ -287,9 +292,6 @@ public class ProfileService {
                         .build());
     }
 
-    /**
-     * Set or update the partner preference.
-     */
     @Transactional
     public PartnerPreference updatePreference(String email, PreferenceRequest request) {
         User user = getUserByEmail(email);
@@ -301,20 +303,44 @@ public class ProfileService {
         return preferenceRepository.save(preference);
     }
 
-    // ===== Private Helpers =====
+    // ===== Account Deletion =====
 
     /**
-     * Save uploaded file to local disk.
-     * Returns the relative URL path to store in DB.
-     *
-     * Path format saved: /uploads/photos/{userId}/{uuid}.{ext}
+     * Permanently delete the logged-in user's account.
+     * Deletion order: photos → likes → interests → preference → expectations → profile → user
      */
+    @Transactional
+    public void deleteAccount(String email) {
+        User user = getUserByEmail(email);
+
+        profileRepository.findByUserId(user.getId()).ifPresent(profile -> {
+            List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
+            for (ProfilePhoto photo : photos) {
+                deleteFileFromDisk(photo.getPhotoUrl());
+            }
+            photoRepository.deleteAll(photos);
+            profileRepository.delete(profile);
+        });
+
+        likeRepository.deleteBySenderId(user.getId());
+        likeRepository.deleteByReceiverId(user.getId());
+        interestRepository.deleteBySenderId(user.getId());
+        interestRepository.deleteByReceiverId(user.getId());
+        preferenceRepository.findByUserId(user.getId()).ifPresent(preferenceRepository::delete);
+        expectationRepository.findByUserId(user.getId()).ifPresent(expectationRepository::delete);
+
+        userRepository.delete(user);
+    }
+
+    // ===== Private Helpers =====
+
+    /** Save uploaded file to local disk, return relative URL path. */
     private String saveFileLocally(MultipartFile file, Long userId) throws IOException {
         Path uploadPath = Paths.get(uploadDir + File.separator + userId);
         Files.createDirectories(uploadPath);
 
         String originalFilename = file.getOriginalFilename();
-        String extension = originalFilename != null && originalFilename.contains(".")
+        String extension = (originalFilename != null && originalFilename.contains("."))
                 ? originalFilename.substring(originalFilename.lastIndexOf("."))
                 : ".jpg";
         String uniqueFilename = UUID.randomUUID() + extension;
@@ -325,48 +351,38 @@ public class ProfileService {
         return "/" + uploadDir + "/" + userId + "/" + uniqueFilename;
     }
 
-    /**
-     * Delete a photo file from local disk.
-     * Silently ignores if file does not exist.
-     *
-     * photoUrl format: /uploads/photos/{userId}/{filename}
-     * Strip the leading slash to resolve as a relative path from project root.
-     */
+    /** Delete a photo file from local disk — silently ignores if missing. */
     private void deleteFileFromDisk(String photoUrl) {
         try {
             String relativePath = photoUrl.startsWith("/") ? photoUrl.substring(1) : photoUrl;
-            Path filePath = Paths.get(relativePath);
-            Files.deleteIfExists(filePath);
+            Files.deleteIfExists(Paths.get(relativePath));
         } catch (IOException e) {
-            // Log but don't fail — file may already be missing
             System.err.println("[WARN] Could not delete file from disk: " + photoUrl + " — " + e.getMessage());
         }
     }
 
-    /**
-     * Build a ProfileResponse DTO from a Profile entity.
-     *
-     * CHANGE: Now maps each ProfilePhoto → PhotoDto (with photoId, photoUrl, isPrimary)
-     *   instead of just extracting the URL string.
-     *   This allows callers to see the DB id of each photo for delete operations.
-     */
+    /** Build ProfileResponse from Profile entity including photos and expectations. */
     private ProfileResponse buildProfileResponse(Profile profile) {
         List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
 
-        // Map each photo entity to a PhotoDto carrying id + url + isPrimary
         List<PhotoDto> photoDtos = photos.stream()
                 .map(photo -> PhotoDto.builder()
-                        .photoId(photo.getId())       // DB id — use this in DELETE /api/profile/photos/{photoId}
+                        .photoId(photo.getId())
                         .photoUrl(photo.getPhotoUrl())
                         .isPrimary(photo.getIsPrimary())
                         .build())
                 .collect(Collectors.toList());
 
-        // Extract just the primary photo URL for quick frontend access
         String primaryPhotoUrl = photos.stream()
                 .filter(ProfilePhoto::getIsPrimary)
                 .map(ProfilePhoto::getPhotoUrl)
                 .findFirst()
+                .orElse(null);
+
+        // Load expectations — null if user has not filled them in
+        ExpectationResponse expectations = expectationRepository
+                .findByUserId(profile.getUser().getId())
+                .map(this::buildExpectationResponse)
                 .orElse(null);
 
         return ProfileResponse.builder()
@@ -375,14 +391,39 @@ public class ProfileService {
                 .fullName(profile.getFullName())
                 .age(profile.getAge())
                 .gender(profile.getGender())
+                .maritalStatus(profile.getMaritalStatus())
                 .city(profile.getCity())
                 .education(profile.getEducation())
                 .profession(profile.getProfession())
+                .height(profile.getHeight())
+                .income(profile.getIncome())
+                .gotra(profile.getGotra())
+                .diet(profile.getDiet())
                 .religion(profile.getReligion())
                 .hobbies(profile.getHobbies())
                 .isComplete(profile.getIsComplete())
-                .photos(photoDtos)           // List of PhotoDto (with photoId)
+                .photos(photoDtos)
                 .primaryPhotoUrl(primaryPhotoUrl)
+                .expectations(expectations)
+                .build();
+    }
+
+    /** Build ExpectationResponse from Expectation entity. */
+    private ExpectationResponse buildExpectationResponse(Expectation expectation) {
+        return ExpectationResponse.builder()
+                .minAge(expectation.getMinAge())
+                .maxAge(expectation.getMaxAge())
+                .preferredMaritalStatus(expectation.getPreferredMaritalStatus())
+                .preferredMinHeight(expectation.getPreferredMinHeight())
+                .preferredMaxHeight(expectation.getPreferredMaxHeight())
+                .preferredCity(expectation.getPreferredCity())
+                .preferredEducation(expectation.getPreferredEducation())
+                .preferredProfession(expectation.getPreferredProfession())
+                .preferredIncome(expectation.getPreferredIncome())
+                .preferredGotra(expectation.getPreferredGotra())
+                .preferredDiet(expectation.getPreferredDiet())
+                .preferredReligion(expectation.getPreferredReligion())
+                .aboutExpectations(expectation.getAboutExpectations())
                 .build();
     }
 

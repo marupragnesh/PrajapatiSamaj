@@ -1,6 +1,8 @@
 package com.matrimonial.dto.request;
 
 import com.matrimonial.entity.Profile.Gender;
+import com.matrimonial.entity.enums.Diet;
+import com.matrimonial.entity.enums.MaritalStatus;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -8,7 +10,8 @@ import lombok.Data;
  * DTO: ProfileRequest
  *
  * Used when creating or updating a user's profile.
- * All required fields are validated before reaching the service layer.
+ * Required fields are validated before reaching the service layer.
+ * New optional fields: maritalStatus, height, income, gotra, diet.
  *
  * Layer: DTO (data transfer only, no logic)
  */
@@ -27,6 +30,10 @@ public class ProfileRequest {
     @NotNull(message = "Gender is required")
     private Gender gender;
 
+    // Required — new field (nullable in DB for existing rows)
+    @NotNull(message = "Marital status is required")
+    private MaritalStatus maritalStatus;
+
     @NotBlank(message = "City is required")
     @Size(max = 100, message = "City must not exceed 100 characters")
     private String city;
@@ -39,7 +46,19 @@ public class ProfileRequest {
     @Size(max = 150, message = "Profession must not exceed 150 characters")
     private String profession;
 
-    // Optional fields (nullable)
+    // ── Optional fields ──
+
+    @Size(max = 20, message = "Height must not exceed 20 characters")
+    private String height;         // e.g. "5'8\""
+
+    @Size(max = 100, message = "Income must not exceed 100 characters")
+    private String income;         // e.g. "50,000/month"
+
+    @Size(max = 100, message = "Gotra must not exceed 100 characters")
+    private String gotra;
+
+    private Diet diet;             // VEG, NON_VEG, VEGAN
+
     @Size(max = 100, message = "Religion must not exceed 100 characters")
     private String religion;
 

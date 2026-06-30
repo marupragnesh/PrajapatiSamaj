@@ -1,5 +1,7 @@
 package com.matrimonial.entity;
 
+import com.matrimonial.entity.enums.Diet;
+import com.matrimonial.entity.enums.MaritalStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -44,6 +46,11 @@ public class Profile {
     @Column(nullable = false, length = 20)
     private Gender gender;
 
+    // ENUM values: SINGLE, DIVORCED, WIDOWED — nullable for existing rows
+    @Enumerated(EnumType.STRING)
+    @Column(name = "marital_status", length = 20)
+    private MaritalStatus maritalStatus;
+
     @Column(nullable = false, length = 100)
     private String city;
 
@@ -53,11 +60,28 @@ public class Profile {
     @Column(nullable = false, length = 150)
     private String profession;
 
-    // Religion is optional (nullable)
+    // Optional: stored as "5'8"" formatted string
+    @Column(name = "height", length = 20)
+    private String height;
+
+    // Optional: e.g. "50,000/month"
+    @Column(name = "income", length = 100)
+    private String income;
+
+    // Optional: Prajapati community gotra
+    @Column(name = "gotra", length = 100)
+    private String gotra;
+
+    // Optional: VEG, NON_VEG, VEGAN
+    @Enumerated(EnumType.STRING)
+    @Column(name = "diet", length = 20)
+    private Diet diet;
+
+    // Optional
     @Column(length = 100)
     private String religion;
 
-    // Hobbies are optional, stored as text
+    // Optional — stored as free text
     @Column(columnDefinition = "TEXT")
     private String hobbies;
 
