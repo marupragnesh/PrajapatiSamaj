@@ -1,24 +1,21 @@
 package com.matrimonial.controller;
 
 import com.matrimonial.dto.response.ProfileResponse;
+import com.matrimonial.dto.response.ProfileSearchResultDto;
 import com.matrimonial.service.DiscoverService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
  * CONTROLLER: DiscoverController
  *
- * Handles the profile discovery / browse feature.
- *
- *   GET /api/discover?page=0&size=10 - Browse profiles matching gender preference
+ *   GET /api/discover?page=0&size=10       — Browse profiles by gender preference
+ *   GET /api/discover/search?keyword=name  — Search profiles by full name
  *
  * Layer: Controller (HTTP in/out only — no business logic)
  */
@@ -31,12 +28,7 @@ public class DiscoverController {
 
     /**
      * Browse profiles filtered by the user's partner preference.
-     *
-     * Query params:
-     *   page (default 0)  — page number (0-indexed)
-     *   size (default 10) — how many profiles per page
-     *
-     * Example: GET /api/discover?page=0&size=10
+     * Query params: page (default 0), size (default 10)
      */
     @GetMapping
     public ResponseEntity<List<ProfileResponse>> discoverProfiles(
@@ -48,5 +40,27 @@ public class DiscoverController {
                 userDetails.getUsername(), page, size);
 
         return ResponseEntity.ok(profiles);
+    }
+
+    /**
+     * Search profiles by full name (case-insensitive, partial match).
+     * Returns lightweight results: profileId + fullName + primaryPhotoUrl only.
+     * Query params: keyword (required, min 1 char)
+     *
+     * Example: GET /api/discover/search?keyword=rahul
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<ProfileSearchResultDto>> searchProfiles(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String keyword) {
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<ProfileSearchResultDto> results = discoverService.searchByName(
+                userDetails.getUsername(), keyword);
+
+        return ResponseEntity.ok(results);
     }
 }

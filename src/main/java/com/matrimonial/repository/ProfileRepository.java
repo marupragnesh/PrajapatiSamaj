@@ -57,4 +57,21 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
             @Param("userId") Long userId,
             Pageable pageable
     );
+
+    /**
+     * Search query — find COMPLETE profiles whose full name contains the
+     * given keyword (case-insensitive), excluding the logged-in user.
+     * Used by the "search by name" feature on the Discover page.
+     *
+     * @param keyword  partial or full name typed by the user
+     * @param userId   the current user's ID (excluded from results)
+     * @param pageable pagination info
+     */
+    @Query("SELECT p FROM Profile p WHERE LOWER(p.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "AND p.user.id != :userId AND p.isComplete = true")
+    Page<Profile> searchByFullNameContainingIgnoreCase(
+            @Param("keyword") String keyword,
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
 }

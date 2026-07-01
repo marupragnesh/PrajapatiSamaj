@@ -5,6 +5,7 @@ import com.matrimonial.exception.BadRequestException;
 import com.matrimonial.repository.OtpRepository;
 import com.matrimonial.util.OtpUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OtpService {
 
     private final OtpRepository otpRepository;
@@ -59,6 +61,8 @@ public class OtpService {
 
         otpRepository.save(otpToken);
 
+        log.info("OTP generated and saved for email={}", email);
+
         // Send OTP via email
         emailService.sendOtpEmail(email, otp);
     }
@@ -82,16 +86,22 @@ public class OtpService {
         // Find matching unused OTP
         OtpToken otpToken = otpRepository
                 .findByEmailAndIsUsedFalseAndOtpCode(email, otpCode)
-                .orElseThrow(() -> new BadRequestException("Invalid OTP. Please check and try again."));
+                .orElseThrow(() -> {
+                    log.info("OTP verification failed — email={}, reason=Invalid OTP", email);
+                    return new BadRequestException("Invalid OTP. Please check and try again.");
+                });
 
         // Check if OTP has expired
         if (otpToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.info("OTP verification failed — email={}, reason=Expired", email);
             throw new BadRequestException("OTP has expired. Please request a new one.");
         }
 
         // Mark OTP as used (single-use enforcement)
         otpToken.setIsUsed(true);
         otpRepository.save(otpToken);
+
+        log.info("OTP verified successfully — email={}", email);
     }
 
     /**

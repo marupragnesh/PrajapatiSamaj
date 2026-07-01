@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ import java.util.Date;
  * Layer: Util (helper class, used by SecurityConfig and AuthService)
  */
 @Component
+@Slf4j
 public class JwtUtil {
 
     // Secret key from application.properties
@@ -80,8 +82,17 @@ public class JwtUtil {
             Claims claims = extractClaims(token);
             // Token is valid if expiry date is after right now
             return !claims.getExpiration().before(new Date());
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.warn("JWT expired — {}", e.getMessage());
+            return false;
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            log.warn("JWT signature verification failed — {}", e.getMessage());
+            return false;
+        } catch (io.jsonwebtoken.MalformedJwtException e) {
+            log.warn("JWT malformed — {}", e.getMessage());
+            return false;
         } catch (Exception e) {
-            // Any exception (tampered, expired, malformed) = invalid
+            log.warn("JWT validation failed — {}", e.getMessage());
             return false;
         }
     }

@@ -8,6 +8,7 @@ import com.matrimonial.exception.ResourceNotFoundException;
 import com.matrimonial.repository.UserRepository;
 import com.matrimonial.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -65,6 +67,8 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         String token = jwtUtil.generateToken(savedUser.getEmail());
 
+        log.info("User registered successfully — email={}", savedUser.getEmail());
+
         return AuthResponse.builder()
                 .token(token)
                 .userId(savedUser.getId())
@@ -86,18 +90,29 @@ public class AuthService {
         // Normalize email before authentication
         String normalizedEmail = request.getEmail().toLowerCase().trim();
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
+            );
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            log.info("Login failed — email={}, reason={}", normalizedEmail, e.getMessage());
+            throw e;
+        }
 
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.info("Login failed — email={}, reason=User not found", normalizedEmail);
+                    return new ResourceNotFoundException("User not found");
+                });
 
         if (!user.getIsActive()) {
+            log.info("Login failed — email={}, reason=Account deactivated", normalizedEmail);
             throw new BadRequestException("Your account has been deactivated. Please contact support.");
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
+
+        log.info("Login successful — email={}", user.getEmail());
 
         return AuthResponse.builder()
                 .token(token)

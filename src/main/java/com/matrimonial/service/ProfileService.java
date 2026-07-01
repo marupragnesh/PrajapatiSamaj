@@ -4,14 +4,15 @@ import com.matrimonial.dto.request.ExpectationRequest;
 import com.matrimonial.dto.request.PreferenceRequest;
 import com.matrimonial.dto.request.ProfileRequest;
 import com.matrimonial.dto.response.ExpectationResponse;
-import com.matrimonial.dto.response.PhotoDto;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.*;
 import com.matrimonial.exception.BadRequestException;
 import com.matrimonial.exception.ResourceNotFoundException;
 import com.matrimonial.exception.UnauthorizedException;
+import com.matrimonial.mapper.ProfileMapper;
 import com.matrimonial.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,23 +25,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * SERVICE: ProfileService
  *
  * Handles all profile-related business logic:
- *   - Create / Update profile (including new fields: maritalStatus, height, income, gotra, diet)
- *   - Upload / Delete / Set Primary photo
+ *   - Create / Update profile (including address, mobileNo, maritalStatus, height, income, gotra, diet)
+ *   - Upload / Delete / Set Primary photo (max 10 per profile)
  *   - Get / Update partner preferences
- *   - Get / Save expectations (all fields including new ones)
- *   - View own profile and other profiles
+ *   - Get / Save expectations
+ *   - View own profile (full mobile number) and other profiles (masked mobile number)
  *   - Delete account
+ *
+ * Entity → DTO conversion is delegated to ProfileMapper so that
+ * ProfileService and DiscoverService never drift out of sync again.
  *
  * Layer: Service (all business logic lives here)
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
@@ -50,11 +54,12 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
     private final InterestRepository interestRepository;
+    private final ProfileMapper profileMapper;
 
     @Value("${file.upload.dir}")
     private String uploadDir;
 
-    private static final int MAX_PHOTOS = 5;
+    private static final int MAX_PHOTOS = 10;
 
     // ===== Profile CRUD =====
 
@@ -74,6 +79,10 @@ public class ProfileService {
                 .gender(request.getGender())
                 .maritalStatus(request.getMaritalStatus())
                 .city(request.getCity())
+                .mobileNo(request.getMobileNo())
+                .addressLine(request.getAddressLine())
+                .state(request.getState())
+                .pincode(request.getPincode())
                 .education(request.getEducation())
                 .profession(request.getProfession())
                 .height(request.getHeight())
@@ -85,7 +94,9 @@ public class ProfileService {
                 .isComplete(true)
                 .build();
 
-        return buildProfileResponse(profileRepository.save(profile));
+        Profile saved = profileRepository.save(profile);
+        log.info("Profile created — userId={}", saved.getUser().getId());
+        return profileMapper.toProfileResponse(saved, true);
     }
 
     /** Update an existing profile. */
@@ -101,6 +112,10 @@ public class ProfileService {
         profile.setGender(request.getGender());
         profile.setMaritalStatus(request.getMaritalStatus());
         profile.setCity(request.getCity());
+        profile.setMobileNo(request.getMobileNo());
+        profile.setAddressLine(request.getAddressLine());
+        profile.setState(request.getState());
+        profile.setPincode(request.getPincode());
         profile.setEducation(request.getEducation());
         profile.setProfession(request.getProfession());
         profile.setHeight(request.getHeight());
@@ -111,20 +126,22 @@ public class ProfileService {
         profile.setHobbies(request.getHobbies());
         profile.setIsComplete(true);
 
-        return buildProfileResponse(profileRepository.save(profile));
+        Profile saved = profileRepository.save(profile);
+        log.info("Profile updated — userId={}", saved.getUser().getId());
+        return profileMapper.toProfileResponse(saved, true);
     }
 
-    /** Get the logged-in user's own profile. */
+    /** Get the logged-in user's own profile — full (unmasked) mobile number. */
     public ProfileResponse getMyProfile(String email) {
         User user = getUserByEmail(email);
 
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found. Please create your profile."));
 
-        return buildProfileResponse(profile);
+        return profileMapper.toProfileResponse(profile, true);
     }
 
-    /** Get another user's profile by profile ID (only complete profiles). */
+    /** Get another user's profile by profile ID (only complete profiles) — mobile number masked. */
     public ProfileResponse getProfileById(Long profileId) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found."));
@@ -133,14 +150,14 @@ public class ProfileService {
             throw new ResourceNotFoundException("Profile not available.");
         }
 
-        return buildProfileResponse(profile);
+        return profileMapper.toProfileResponse(profile, false);
     }
 
     // ===== Photos =====
 
     /**
      * Upload a photo to the logged-in user's profile.
-     * First photo is automatically set as primary.
+     * First photo is automatically set as primary. Max 10 photos per profile.
      */
     @Transactional
     public ProfileResponse uploadPhoto(String email, MultipartFile file) throws IOException {
@@ -170,8 +187,10 @@ public class ProfileService {
                 .isPrimary(isPrimary)
                 .build();
 
-        photoRepository.save(photo);
-        return buildProfileResponse(profileRepository.findById(profile.getId()).get());
+        ProfilePhoto savedPhoto = photoRepository.save(photo);
+        log.info("Photo uploaded — userId={}, photoId={}", user.getId(), savedPhoto.getId());
+        Profile reloaded = profileRepository.findById(profile.getId()).get();
+        return profileMapper.toProfileResponse(reloaded, true);
     }
 
     /**
@@ -196,6 +215,7 @@ public class ProfileService {
 
         deleteFileFromDisk(photo.getPhotoUrl());
         photoRepository.delete(photo);
+        log.info("Photo deleted — userId={}, photoId={}", user.getId(), photoId);
 
         // Promote next photo to primary if deleted one was primary
         if (wasPrimary) {
@@ -237,7 +257,8 @@ public class ProfileService {
         photo.setIsPrimary(true);
         photoRepository.save(photo);
 
-        return buildProfileResponse(profileRepository.findById(profile.getId()).get());
+        Profile reloaded = profileRepository.findById(profile.getId()).get();
+        return profileMapper.toProfileResponse(reloaded, true);
     }
 
     // ===== Expectations =====
@@ -249,7 +270,7 @@ public class ProfileService {
     public ExpectationResponse getMyExpectations(String email) {
         User user = getUserByEmail(email);
         return expectationRepository.findByUserId(user.getId())
-                .map(this::buildExpectationResponse)
+                .map(profileMapper::toExpectationResponse)
                 .orElse(new ExpectationResponse());
     }
 
@@ -278,7 +299,9 @@ public class ProfileService {
         expectation.setPreferredReligion(request.getPreferredReligion());
         expectation.setAboutExpectations(request.getAboutExpectations());
 
-        return buildExpectationResponse(expectationRepository.save(expectation));
+        Expectation saved = expectationRepository.save(expectation);
+        log.info("Expectations saved — userId={}", user.getId());
+        return profileMapper.toExpectationResponse(saved);
     }
 
     // ===== Preferences =====
@@ -330,6 +353,7 @@ public class ProfileService {
         expectationRepository.findByUserId(user.getId()).ifPresent(expectationRepository::delete);
 
         userRepository.delete(user);
+        log.info("Account deleted — userId={}", user.getId());
     }
 
     // ===== Private Helpers =====
@@ -357,74 +381,8 @@ public class ProfileService {
             String relativePath = photoUrl.startsWith("/") ? photoUrl.substring(1) : photoUrl;
             Files.deleteIfExists(Paths.get(relativePath));
         } catch (IOException e) {
-            System.err.println("[WARN] Could not delete file from disk: " + photoUrl + " — " + e.getMessage());
+            log.warn("Could not delete file from disk: {} — {}", photoUrl, e.getMessage());
         }
-    }
-
-    /** Build ProfileResponse from Profile entity including photos and expectations. */
-    private ProfileResponse buildProfileResponse(Profile profile) {
-        List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
-
-        List<PhotoDto> photoDtos = photos.stream()
-                .map(photo -> PhotoDto.builder()
-                        .photoId(photo.getId())
-                        .photoUrl(photo.getPhotoUrl())
-                        .isPrimary(photo.getIsPrimary())
-                        .build())
-                .collect(Collectors.toList());
-
-        String primaryPhotoUrl = photos.stream()
-                .filter(ProfilePhoto::getIsPrimary)
-                .map(ProfilePhoto::getPhotoUrl)
-                .findFirst()
-                .orElse(null);
-
-        // Load expectations — null if user has not filled them in
-        ExpectationResponse expectations = expectationRepository
-                .findByUserId(profile.getUser().getId())
-                .map(this::buildExpectationResponse)
-                .orElse(null);
-
-        return ProfileResponse.builder()
-                .profileId(profile.getId())
-                .userId(profile.getUser().getId())
-                .fullName(profile.getFullName())
-                .age(profile.getAge())
-                .gender(profile.getGender())
-                .maritalStatus(profile.getMaritalStatus())
-                .city(profile.getCity())
-                .education(profile.getEducation())
-                .profession(profile.getProfession())
-                .height(profile.getHeight())
-                .income(profile.getIncome())
-                .gotra(profile.getGotra())
-                .diet(profile.getDiet())
-                .religion(profile.getReligion())
-                .hobbies(profile.getHobbies())
-                .isComplete(profile.getIsComplete())
-                .photos(photoDtos)
-                .primaryPhotoUrl(primaryPhotoUrl)
-                .expectations(expectations)
-                .build();
-    }
-
-    /** Build ExpectationResponse from Expectation entity. */
-    private ExpectationResponse buildExpectationResponse(Expectation expectation) {
-        return ExpectationResponse.builder()
-                .minAge(expectation.getMinAge())
-                .maxAge(expectation.getMaxAge())
-                .preferredMaritalStatus(expectation.getPreferredMaritalStatus())
-                .preferredMinHeight(expectation.getPreferredMinHeight())
-                .preferredMaxHeight(expectation.getPreferredMaxHeight())
-                .preferredCity(expectation.getPreferredCity())
-                .preferredEducation(expectation.getPreferredEducation())
-                .preferredProfession(expectation.getPreferredProfession())
-                .preferredIncome(expectation.getPreferredIncome())
-                .preferredGotra(expectation.getPreferredGotra())
-                .preferredDiet(expectation.getPreferredDiet())
-                .preferredReligion(expectation.getPreferredReligion())
-                .aboutExpectations(expectation.getAboutExpectations())
-                .build();
     }
 
     private User getUserByEmail(String email) {

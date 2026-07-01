@@ -1,11 +1,13 @@
 package com.matrimonial.service;
 
-import com.matrimonial.dto.response.PhotoDto;
 import com.matrimonial.dto.response.ProfileResponse;
+import com.matrimonial.dto.response.ProfileSearchResultDto;
 import com.matrimonial.entity.*;
 import com.matrimonial.exception.ResourceNotFoundException;
+import com.matrimonial.mapper.ProfileMapper;
 import com.matrimonial.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,25 +20,27 @@ import java.util.stream.Collectors;
 /**
  * SERVICE: DiscoverService
  *
- * Handles the discovery / browse profiles feature.
+ * Handles the discovery / browse profiles feature and name-based search.
  *
  * Business rules:
- *   - Only show profiles where is_complete = true
- *   - Filter by user's gender preference (MALE, FEMALE, or ANY)
- *   - Exclude the logged-in user's own profile
- *   - Sort by recently joined (created_at DESC)
- *   - Pagination support (default 10 per page)
+ *   - discoverProfiles: only complete profiles, filtered by gender preference,
+ *     excluding logged-in user, sorted newest first, paginated.
+ *   - searchByName: case-insensitive partial name match across all complete
+ *     profiles (excluding logged-in user). Returns lightweight DTO (name + DP).
+ *
+ * Entity → DTO conversion delegated to ProfileMapper (single source of truth).
  *
  * Layer: Service (all business logic lives here)
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DiscoverService {
 
     private final ProfileRepository profileRepository;
-    private final PhotoRepository photoRepository;
     private final PartnerPreferenceRepository preferenceRepository;
     private final UserRepository userRepository;
+    private final ProfileMapper profileMapper;
 
     /**
      * Get a paginated list of profiles matching the logged-in user's preference.
@@ -44,86 +48,63 @@ public class DiscoverService {
      * @param email  logged-in user's email
      * @param page   page number (0-indexed)
      * @param size   number of profiles per page
-     * @return list of ProfileResponse DTOs
      */
     public List<ProfileResponse> discoverProfiles(String email, int page, int size) {
+        User currentUser = getUserByEmail(email);
 
-        // Load the current user
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-
-        // Get the user's partner preference (default: ANY)
         PartnerPreference preference = preferenceRepository.findByUserId(currentUser.getId())
                 .orElse(PartnerPreference.builder()
                         .preferredGender(PartnerPreference.PreferredGender.ANY)
                         .build());
 
-        // Sort by most recently created profile first
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Profile> profilePage;
 
-        // Filter by gender preference
         if (preference.getPreferredGender() == PartnerPreference.PreferredGender.ANY) {
-            // Show all complete profiles (excluding current user)
             profilePage = profileRepository.findByUserIdNotAndIsCompleteTrue(
                     currentUser.getId(), pageable);
         } else {
-            // Convert PreferredGender enum to Profile.Gender enum for the query
-            Profile.Gender genderFilter = Profile.Gender.valueOf(preference.getPreferredGender().name());
-
-            // Show only profiles of the preferred gender (excluding current user)
+            Profile.Gender genderFilter = Profile.Gender.valueOf(
+                    preference.getPreferredGender().name());
             profilePage = profileRepository.findByGenderAndUserIdNotAndIsCompleteTrue(
                     genderFilter, currentUser.getId(), pageable);
         }
 
-        // Convert Profile entities to ProfileResponse DTOs
+        // isOwnProfile = false — these are other users' profiles (mobile masked)
         return profilePage.getContent().stream()
-                .map(this::buildProfileResponse)
+                .map(profile -> profileMapper.toProfileResponse(profile, false))
                 .collect(Collectors.toList());
     }
 
-    // ===== Private Helper =====
-
     /**
-     * Build ProfileResponse DTO from a Profile entity.
-     * Loads photos for each profile.
+     * Search complete profiles by full name (case-insensitive, partial match).
+     * Returns lightweight results: profileId + fullName + primaryPhotoUrl only.
+     * Excludes the logged-in user from results.
      *
-     * CHANGE: Now maps each photo to PhotoDto (photoId + photoUrl + isPrimary)
-     *   so the caller can identify each photo by its DB id.
+     * @param email   logged-in user's email
+     * @param keyword partial or full name to search for
      */
-    private ProfileResponse buildProfileResponse(Profile profile) {
-        List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
+    public List<ProfileSearchResultDto> searchByName(String email, String keyword) {
+        User currentUser = getUserByEmail(email);
 
-        // Map each photo entity to PhotoDto — carries DB id for delete operations
-        List<PhotoDto> photoDtos = photos.stream()
-                .map(photo -> PhotoDto.builder()
-                        .photoId(photo.getId())
-                        .photoUrl(photo.getPhotoUrl())
-                        .isPrimary(photo.getIsPrimary())
-                        .build())
+        // Limit to 20 results — search is meant for quick lookup, not full browse
+        Pageable pageable = PageRequest.of(0, 20, Sort.by("fullName").ascending());
+
+        Page<Profile> results = profileRepository.searchByFullNameContainingIgnoreCase(
+                keyword.trim(), currentUser.getId(), pageable);
+
+        List<ProfileSearchResultDto> list = results.getContent().stream()
+                .map(profileMapper::toSearchResultDto)
                 .collect(Collectors.toList());
 
-        String primaryPhotoUrl = photos.stream()
-                .filter(ProfilePhoto::getIsPrimary)
-                .map(ProfilePhoto::getPhotoUrl)
-                .findFirst()
-                .orElse(null);
+        log.info("Search performed — keyword='{}', resultsCount={}, userId={}", keyword, list.size(), currentUser.getId());
 
-        return ProfileResponse.builder()
-                .profileId(profile.getId())
-                .userId(profile.getUser().getId())
-                .fullName(profile.getFullName())
-                .age(profile.getAge())
-                .gender(profile.getGender())
-                .city(profile.getCity())
-                .education(profile.getEducation())
-                .profession(profile.getProfession())
-                .religion(profile.getReligion())
-                .hobbies(profile.getHobbies())
-                .isComplete(profile.getIsComplete())
-                .photos(photoDtos)
-                .primaryPhotoUrl(primaryPhotoUrl)
-                .build();
+        return list;
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 }

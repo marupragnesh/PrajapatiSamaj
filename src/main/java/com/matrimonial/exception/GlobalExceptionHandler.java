@@ -1,6 +1,8 @@
 package com.matrimonial.exception;
 
 import com.matrimonial.dto.response.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -23,6 +25,7 @@ import java.util.Map;
  * Layer: Exception (cross-cutting concern — applies to all layers)
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -83,8 +86,8 @@ public class GlobalExceptionHandler {
      * Catches everything not handled above as a safety net.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse> handleGenericException(Exception ex) {
-        // Log in real project: log.error("Unexpected error", ex);
+    public ResponseEntity<ApiResponse> handleGenericException(Exception ex, HttpServletRequest request) {
+        log.error("Unhandled exception — {} {}", request.getMethod(), request.getRequestURI(), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Something went wrong. Please try again later."));

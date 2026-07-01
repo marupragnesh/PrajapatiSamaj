@@ -54,6 +54,21 @@ public class Profile {
     @Column(nullable = false, length = 100)
     private String city;
 
+    // Required — 10-digit Indian mobile number. Masked (e.g. "98********") when
+    // shown to other users; full number visible only to the profile owner.
+    @Column(name = "mobile_no", length = 10)
+    private String mobileNo;
+
+    // Required — address split into 3 structured fields (nullable in DB for old rows)
+    @Column(name = "address_line", length = 255)
+    private String addressLine;
+
+    @Column(name = "state", length = 100)
+    private String state;
+
+    @Column(name = "pincode", length = 6)
+    private String pincode;
+
     @Column(nullable = false, length = 150)
     private String education;
 
@@ -90,7 +105,7 @@ public class Profile {
     @Builder.Default
     private Boolean isComplete = false;
 
-    // One profile can have up to 5 photos
+    // One profile can have up to 10 photos (see ProfileService.MAX_PHOTOS)
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ProfilePhoto> photos;
 

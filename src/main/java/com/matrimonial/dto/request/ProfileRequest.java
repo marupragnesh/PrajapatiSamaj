@@ -11,7 +11,6 @@ import lombok.Data;
  *
  * Used when creating or updating a user's profile.
  * Required fields are validated before reaching the service layer.
- * New optional fields: maritalStatus, height, income, gotra, diet.
  *
  * Layer: DTO (data transfer only, no logic)
  */
@@ -30,13 +29,30 @@ public class ProfileRequest {
     @NotNull(message = "Gender is required")
     private Gender gender;
 
-    // Required — new field (nullable in DB for existing rows)
     @NotNull(message = "Marital status is required")
     private MaritalStatus maritalStatus;
 
     @NotBlank(message = "City is required")
     @Size(max = 100, message = "City must not exceed 100 characters")
     private String city;
+
+    // Required — 10 digit Indian mobile number, numeric only
+    @NotBlank(message = "Mobile number is required")
+    @Pattern(regexp = "^[6-9][0-9]{9}$", message = "Enter a valid 10-digit mobile number")
+    private String mobileNo;
+
+    // Required — address split into 3 fields
+    @NotBlank(message = "Address is required")
+    @Size(max = 255, message = "Address must not exceed 255 characters")
+    private String addressLine;
+
+    @NotBlank(message = "State is required")
+    @Size(max = 100, message = "State must not exceed 100 characters")
+    private String state;
+
+    @NotBlank(message = "Pincode is required")
+    @Pattern(regexp = "^[0-9]{6}$", message = "Enter a valid 6-digit pincode")
+    private String pincode;
 
     @NotBlank(message = "Education is required")
     @Size(max = 150, message = "Education must not exceed 150 characters")

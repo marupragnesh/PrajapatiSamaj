@@ -17,6 +17,9 @@ import java.util.List;
  *
  * Photos: List<PhotoDto> carries photoId + photoUrl + isPrimary.
  * Expectations: nullable — shown when a user has filled them in.
+ * mobileNo: masked (e.g. "98********") when viewing another user's profile;
+ *           full number only when the viewer is the profile owner.
+ *           Masking decision is made in ProfileService — not here.
  *
  * Layer: DTO (data transfer only, no logic)
  */
@@ -33,6 +36,10 @@ public class ProfileResponse {
     private Gender gender;
     private MaritalStatus maritalStatus;
     private String city;
+    private String mobileNo;       // masked unless viewer is the owner
+    private String addressLine;
+    private String state;
+    private String pincode;
     private String education;
     private String profession;
     private String height;
