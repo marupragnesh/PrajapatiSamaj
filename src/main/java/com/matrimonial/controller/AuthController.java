@@ -65,6 +65,17 @@ public class AuthController {
     }
 
     /**
+     * Resend OTP for Forgot Password flow.
+     */
+    @PostMapping("/resend-otp")
+    public ResponseEntity<ApiResponse> resendOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(
+            ApiResponse.success("If this email is registered, a new OTP has been sent.")
+        );
+    }
+
+    /**
      * Step 2: Verify the OTP entered by the user.
      */
     @PostMapping("/verify-otp")

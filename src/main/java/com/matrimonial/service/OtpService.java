@@ -97,10 +97,6 @@ public class OtpService {
             throw new BadRequestException("OTP has expired. Please request a new one.");
         }
 
-        // Mark OTP as used (single-use enforcement)
-        otpToken.setIsUsed(true);
-        otpRepository.save(otpToken);
-
         log.info("OTP verified successfully — email={}", email);
     }
 

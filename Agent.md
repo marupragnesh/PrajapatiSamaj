@@ -91,6 +91,7 @@ com.matrimonial
 | 29 | Backend Logging | ✅ Done | logback-spring.xml + @Slf4j + RequestLoggingFilter |
 | 30 | Suggestion/Bug Report Page | ❌ Deferred | Will implement later |
 | 31 | Admin Panel | ❌ Pending | Next major feature |
+| 32 | Resend OTP Feature | ✅ Done | Cooldown timer + backend endpoint |
 
 ---
 
@@ -292,6 +293,15 @@ ALTER TABLE profiles
 - `service/OtpService.java` — logs OTP generation and verification without printing sensitive codes
 - `service/ProfileService.java` — logs profile create, update, photo upload/delete, expectations save, and account deletion
 - `service/DiscoverService.java` — logs searches performed (keyword, resultsCount, userId)
+
+### 2026-07-01 — Resend OTP Implementation & SMTP App Password Update
+
+- Updated `spring.mail.password` in `application.properties` to the new App Password `zsuqgqijbjoncvos`.
+- Added `POST /api/auth/resend-otp` endpoint to `AuthController.java`.
+- Added `resendOtp` to `authApi.js` in frontend.
+- Added "Resend OTP" button with a 30-second cooldown timer to `VerifyOtpPage.jsx`.
+- Fixed bug where frontend was sending `{ otp }` instead of `{ otpCode }` to the backend.
+- Fixed backend bug where OTP was verified twice (once during verify-otp and again during reset-password), resulting in an "Invalid OTP" error on password reset since it was marked used in the first call.
 
 ---
 
