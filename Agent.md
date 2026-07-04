@@ -1,11 +1,12 @@
 # Agent.md — PrajapatiSamaj Matrimonial Platform
 
 > Maintained by Claude. Update after every session.
-> Last updated: 2026-07-01
+> Last updated: 2026-07-04
 
 ---
 
 ## 📁 Project Overview
+
 
 | Field | Details |
 |---|---|
@@ -92,6 +93,8 @@ com.matrimonial
 | 30 | Suggestion/Bug Report Page | ❌ Deferred | Will implement later |
 | 31 | Admin Panel | ❌ Pending | Next major feature |
 | 32 | Resend OTP Feature | ✅ Done | Cooldown timer + backend endpoint |
+| 33 | Family Details & Profile Description | ✅ Done | Added father/mother name (mandatory) & occupations (optional), description, and mobileNo display in profile section |
+
 
 ---
 

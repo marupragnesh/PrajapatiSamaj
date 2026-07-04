@@ -100,6 +100,27 @@ public class Profile {
     @Column(columnDefinition = "TEXT")
     private String hobbies;
 
+    // Mandatory (validated in DTO), stored as column father_name
+    @Column(name = "father_name", length = 100)
+    private String fatherName;
+
+    // Optional
+    @Column(name = "father_occupation", length = 100)
+    private String fatherOccupation;
+
+    // Mandatory (validated in DTO), stored as column mother_name
+    @Column(name = "mother_name", length = 100)
+    private String motherName;
+
+    // Optional
+    @Column(name = "mother_occupation", length = 100)
+    private String motherOccupation;
+
+    // Optional — stored as free text (similar to aboutExpectations)
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+
     // Profile only shows in discovery when this is true
     @Column(name = "is_complete", nullable = false)
     @Builder.Default

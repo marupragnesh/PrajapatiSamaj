@@ -79,4 +79,23 @@ public class ProfileRequest {
     private String religion;
 
     private String hobbies;
+
+    // Mandatory parents fields
+    @NotBlank(message = "Father name is required")
+    @Size(max = 100, message = "Father name must not exceed 100 characters")
+    private String fatherName;
+
+    @Size(max = 100, message = "Father occupation must not exceed 100 characters")
+    private String fatherOccupation;
+
+    @NotBlank(message = "Mother name is required")
+    @Size(max = 100, message = "Mother name must not exceed 100 characters")
+    private String motherName;
+
+    @Size(max = 100, message = "Mother occupation must not exceed 100 characters")
+    private String motherOccupation;
+
+    // Optional description field
+    private String description;
 }
+

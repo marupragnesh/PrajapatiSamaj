@@ -86,7 +86,13 @@ public class ProfileMapper {
                 .diet(profile.getDiet())
                 .religion(profile.getReligion())
                 .hobbies(profile.getHobbies())
+                .fatherName(profile.getFatherName())
+                .fatherOccupation(profile.getFatherOccupation())
+                .motherName(profile.getMotherName())
+                .motherOccupation(profile.getMotherOccupation())
+                .description(profile.getDescription())
                 .isComplete(profile.getIsComplete())
+
                 .photos(photoDtos)
                 .primaryPhotoUrl(primaryPhotoUrl)
                 .expectations(expectations)

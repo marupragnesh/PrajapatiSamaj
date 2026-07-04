@@ -91,6 +91,11 @@ public class ProfileService {
                 .diet(request.getDiet())
                 .religion(request.getReligion())
                 .hobbies(request.getHobbies())
+                .fatherName(request.getFatherName())
+                .fatherOccupation(request.getFatherOccupation())
+                .motherName(request.getMotherName())
+                .motherOccupation(request.getMotherOccupation())
+                .description(request.getDescription())
                 .isComplete(true)
                 .build();
 
@@ -124,7 +129,13 @@ public class ProfileService {
         profile.setDiet(request.getDiet());
         profile.setReligion(request.getReligion());
         profile.setHobbies(request.getHobbies());
+        profile.setFatherName(request.getFatherName());
+        profile.setFatherOccupation(request.getFatherOccupation());
+        profile.setMotherName(request.getMotherName());
+        profile.setMotherOccupation(request.getMotherOccupation());
+        profile.setDescription(request.getDescription());
         profile.setIsComplete(true);
+
 
         Profile saved = profileRepository.save(profile);
         log.info("Profile updated — userId={}", saved.getUser().getId());

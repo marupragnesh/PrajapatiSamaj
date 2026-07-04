@@ -48,7 +48,13 @@ public class ProfileResponse {
     private Diet diet;
     private String religion;
     private String hobbies;
+    private String fatherName;
+    private String fatherOccupation;
+    private String motherName;
+    private String motherOccupation;
+    private String description;
     private Boolean isComplete;
+
 
     // List of photos — each has photoId, photoUrl, isPrimary
     private List<PhotoDto> photos;
