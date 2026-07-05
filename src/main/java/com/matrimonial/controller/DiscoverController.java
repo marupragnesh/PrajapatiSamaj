@@ -1,5 +1,6 @@
 package com.matrimonial.controller;
 
+import com.matrimonial.dto.request.DiscoverFilterRequest;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.dto.response.ProfileSearchResultDto;
 import com.matrimonial.service.DiscoverService;
@@ -14,8 +15,8 @@ import java.util.List;
 /**
  * CONTROLLER: DiscoverController
  *
- *   GET /api/discover?page=0&size=10       — Browse profiles by gender preference
- *   GET /api/discover/search?keyword=name  — Search profiles by full name
+ *   GET /api/discover?page=0&size=10&minAge=&maxAge=&maritalStatus=&minHeight=&maxHeight=&diet= — Browse profiles with optional filters
+ *   GET /api/discover/search?keyword=name — Search profiles by full name
  *
  * Layer: Controller (HTTP in/out only — no business logic)
  */
@@ -27,17 +28,18 @@ public class DiscoverController {
     private final DiscoverService discoverService;
 
     /**
-     * Browse profiles filtered by the user's partner preference.
-     * Query params: page (default 0), size (default 10)
+     * Browse profiles filtered by the user's partner preference and optional filters.
+     * Query params: page (default 0), size (default 10), minAge, maxAge, maritalStatus, minHeight, maxHeight, diet
      */
     @GetMapping
     public ResponseEntity<List<ProfileResponse>> discoverProfiles(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @ModelAttribute DiscoverFilterRequest filter) {
 
         List<ProfileResponse> profiles = discoverService.discoverProfiles(
-                userDetails.getUsername(), page, size);
+                userDetails.getUsername(), page, size, filter);
 
         return ResponseEntity.ok(profiles);
     }

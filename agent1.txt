@@ -33,29 +33,56 @@ Done: ExpectationsPage.jsx
 Starting: Agent.md
 Done: Agent.md
 
+Feature: Discover Page Filters (Age, Marital Status, Height, Diet)
+Questions asked: filter UI location, which fields to filter, city filter type, apply immediately or apply button, individual filter clear option
+Answers given: popup box on top button; Age range, Marital Status, Height range, Diet; city filter cancelled; apply immediately on change; yes - each filter has its own X clear button plus a Clear All button
+Plan:
+  - Backend layers (strict separation):
+    - DTO: DiscoverFilterRequest (minAge, maxAge, maritalStatus, minHeight, maxHeight, diet - all optional/nullable)
+    - Repository: new filtered query method in ProfileRepository (JPA Specification or @Query with optional params)
+    - Service: DiscoverService method updated to accept DiscoverFilterRequest and pass to repository
+    - Controller: DiscoverController endpoint updated to accept filter params (query params) and pass to service
+  - Frontend:
+    - Component: FilterPopup.jsx - popup box, 4 filter fields (age range, marital status, height range, diet), each field has its own X clear button, plus one Clear All button, applies immediately on change (no Apply button)
+    - Page update: DiscoverPage.jsx - add Filter button on top that opens FilterPopup, wire filter state to discover API call
+Status: Feature completed successfully.
+Starting: DiscoverFilterRequest.java
+Done: DiscoverFilterRequest.java
+Starting: ProfileSpecification.java
+Done: ProfileSpecification.java
+Starting: ProfileRepository.java
+Done: ProfileRepository.java
+Starting: DiscoverService.java
+Done: DiscoverService.java
+Starting: DiscoverController.java
+Done: DiscoverController.java
+Starting: discoverApi.js
+Done: discoverApi.js
+Starting: FilterPopup.jsx
+Done: FilterPopup.jsx
+Starting: DiscoverPage.jsx
+Done: DiscoverPage.jsx
+Starting: Agent.md
+Done: Agent.md
 
+Feature: Update Discover Page Filter to Apply button mode
+Questions asked: None
+Answers given: N/A
+Plan: FilterPopup.jsx, DiscoverPage.jsx, Agent.md
+Status: Feature completed successfully.
+Starting: FilterPopup.jsx
+Done: FilterPopup.jsx
+Starting: DiscoverPage.jsx
+Done: DiscoverPage.jsx
+Starting: Agent.md
+Done: Agent.md
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Feature: Robust Height Range Filtering (dot, apostrophe, quote formats)
+Questions asked: None
+Answers given: N/A
+Plan: ProfileSpecification.java, Agent.md
+Status: Feature completed successfully.
+Starting: ProfileSpecification.java
+Done: ProfileSpecification.java
+Starting: Agent.md
+Done: Agent.md

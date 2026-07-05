@@ -1,17 +1,20 @@
 package com.matrimonial.service;
 
+import com.matrimonial.dto.request.DiscoverFilterRequest;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.dto.response.ProfileSearchResultDto;
 import com.matrimonial.entity.*;
 import com.matrimonial.exception.ResourceNotFoundException;
 import com.matrimonial.mapper.ProfileMapper;
 import com.matrimonial.repository.*;
+import com.matrimonial.repository.specification.ProfileSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,11 +23,11 @@ import java.util.stream.Collectors;
 /**
  * SERVICE: DiscoverService
  *
- * Handles the discovery / browse profiles feature and name-based search.
+ * Handles the discovery / browse profiles feature with dynamic filters and name-based search.
  *
  * Business rules:
- *   - discoverProfiles: only complete profiles, filtered by gender preference,
- *     excluding logged-in user, sorted newest first, paginated.
+ *   - discoverProfiles: only complete profiles, filtered by gender preference and optional filters
+ *     (age, marital status, height, diet), excluding logged-in user, sorted newest first, paginated.
  *   - searchByName: case-insensitive partial name match across all complete
  *     profiles (excluding logged-in user). Returns lightweight DTO (name + DP).
  *
@@ -43,13 +46,14 @@ public class DiscoverService {
     private final ProfileMapper profileMapper;
 
     /**
-     * Get a paginated list of profiles matching the logged-in user's preference.
+     * Get a paginated list of profiles matching the logged-in user's preference and optional filters.
      *
      * @param email  logged-in user's email
      * @param page   page number (0-indexed)
      * @param size   number of profiles per page
+     * @param filter optional search filters (minAge, maxAge, maritalStatus, minHeight, maxHeight, diet)
      */
-    public List<ProfileResponse> discoverProfiles(String email, int page, int size) {
+    public List<ProfileResponse> discoverProfiles(String email, int page, int size, DiscoverFilterRequest filter) {
         User currentUser = getUserByEmail(email);
 
         PartnerPreference preference = preferenceRepository.findByUserId(currentUser.getId())
@@ -57,24 +61,29 @@ public class DiscoverService {
                         .preferredGender(PartnerPreference.PreferredGender.ANY)
                         .build());
 
+        Profile.Gender genderFilter = null;
+        if (preference.getPreferredGender() != PartnerPreference.PreferredGender.ANY) {
+            genderFilter = Profile.Gender.valueOf(preference.getPreferredGender().name());
+        }
+
+        Specification<Profile> spec = ProfileSpecification.getDiscoverSpecification(
+                currentUser.getId(), genderFilter, filter);
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        Page<Profile> profilePage;
+        Page<Profile> profilePage = profileRepository.findAll(spec, pageable);
 
-        if (preference.getPreferredGender() == PartnerPreference.PreferredGender.ANY) {
-            profilePage = profileRepository.findByUserIdNotAndIsCompleteTrue(
-                    currentUser.getId(), pageable);
-        } else {
-            Profile.Gender genderFilter = Profile.Gender.valueOf(
-                    preference.getPreferredGender().name());
-            profilePage = profileRepository.findByGenderAndUserIdNotAndIsCompleteTrue(
-                    genderFilter, currentUser.getId(), pageable);
-        }
+        log.info("Discover profiles requested — userId={}, page={}, size={}, filter={}, resultCount={}",
+                currentUser.getId(), page, size, filter, profilePage.getNumberOfElements());
 
         // isOwnProfile = false — these are other users' profiles (mobile masked)
         return profilePage.getContent().stream()
                 .map(profile -> profileMapper.toProfileResponse(profile, false))
                 .collect(Collectors.toList());
+    }
+
+    public List<ProfileResponse> discoverProfiles(String email, int page, int size) {
+        return discoverProfiles(email, page, size, null);
     }
 
     /**

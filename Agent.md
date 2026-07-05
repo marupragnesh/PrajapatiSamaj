@@ -95,6 +95,7 @@ com.matrimonial
 | 32 | Resend OTP Feature | ✅ Done | Cooldown timer + backend endpoint |
 | 33 | Family Details & Profile Description | ✅ Done | Added father/mother name (mandatory) & occupations (optional), description, and mobileNo display in profile section |
 | 34 | Photo Grid Wrap & Instagram Profile Header | ✅ Done | Wrapped photo thumbnails in grid (no scrollbar) & added DP avatar, user email, Edit Profile / Edit Expectation tabs |
+| 35 | Discover Page Filters | ✅ Done | Age range, Marital status, Height range, Diet filters with live updates, clear buttons & popup modal |
 
 
 
@@ -130,7 +131,7 @@ com.matrimonial
 ### Discovery (JWT Required)
 | Method | URL | Status |
 |---|---|---|
-| GET | /api/discover?page=0&size=10 | ✅ |
+| GET | /api/discover?page=0&size=10&minAge=&maxAge=&maritalStatus=&minHeight=&maxHeight=&diet= | ✅ Filtered |
 | GET | /api/discover/search?keyword= | ✅ NEW |
 
 ### Likes (JWT Required)
@@ -307,6 +308,20 @@ ALTER TABLE profiles
 - Added "Resend OTP" button with a 30-second cooldown timer to `VerifyOtpPage.jsx`.
 - Fixed bug where frontend was sending `{ otp }` instead of `{ otpCode }` to the backend.
 - Fixed backend bug where OTP was verified twice (once during verify-otp and again during reset-password), resulting in an "Invalid OTP" error on password reset since it was marked used in the first call.
+
+### 2026-07-05 — Discover Page Filters Implementation
+
+**Backend changes:**
+- `dto/request/DiscoverFilterRequest.java` — added optional DTO (`minAge`, `maxAge`, `maritalStatus`, `minHeight`, `maxHeight`, `diet`)
+- `repository/specification/ProfileSpecification.java` — dynamic JPA Specification for age range, marital status, diet, and multi-format height range parsing (`4.8`, `4'8`, `4'8"`, `5.8`, `6.2`)
+- `repository/ProfileRepository.java` — extended `JpaSpecificationExecutor<Profile>`
+- `service/DiscoverService.java` — updated `discoverProfiles` to use `ProfileSpecification` and log filter execution details
+- `controller/DiscoverController.java` — updated `GET /api/discover` endpoint to bind `@ModelAttribute DiscoverFilterRequest filter`
+
+**Frontend changes:**
+- `api/discoverApi.js` — updated `discoverProfiles` to pass non-empty filter parameters
+- `components/discover/FilterPopup.jsx` — created popup modal component with 4 filter fields, staging state with "Apply Filters" button, individual X clear buttons, and Clear All
+- `pages/DiscoverPage.jsx` — integrated Filter button with active filter counter badge, active filter chips bar, and FilterPopup modal
 
 ---
 
