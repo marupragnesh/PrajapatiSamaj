@@ -94,6 +94,8 @@ com.matrimonial
 | 31 | Admin Panel | ❌ Pending | Next major feature |
 | 32 | Resend OTP Feature | ✅ Done | Cooldown timer + backend endpoint |
 | 33 | Family Details & Profile Description | ✅ Done | Added father/mother name (mandatory) & occupations (optional), description, and mobileNo display in profile section |
+| 34 | Photo Grid Wrap & Instagram Profile Header | ✅ Done | Wrapped photo thumbnails in grid (no scrollbar) & added DP avatar, user email, Edit Profile / Edit Expectation tabs |
+
 
 
 ---

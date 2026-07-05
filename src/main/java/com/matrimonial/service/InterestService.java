@@ -18,16 +18,16 @@ import java.util.stream.Collectors;
  * SERVICE: InterestService
  *
  * Handles all Interest Request business logic:
- *   - Send an interest request
- *   - Accept or decline a received interest
- *   - View received interests (pending)
- *   - View mutual matches (both accepted)
+ * - Send an interest request
+ * - Accept or decline a received interest
+ * - View received interests (pending)
+ * - View mutual matches (both accepted)
  *
  * Business rules:
- *   - Cannot send interest to own profile
- *   - Cannot re-send if already PENDING or ACCEPTED
- *   - Only receiver can accept/decline
- *   - Mutual match = both users accepted each other
+ * - Cannot send interest to own profile
+ * - Cannot re-send if already PENDING or ACCEPTED
+ * - Only receiver can accept/decline
+ * - Mutual match = both users accepted each other
  *
  * Layer: Service (all business logic lives here)
  */
@@ -44,8 +44,8 @@ public class InterestService {
     /**
      * Send an interest request to another user's profile.
      *
-     * @param senderEmail        logged-in user's email
-     * @param receiverProfileId  target profile ID
+     * @param senderEmail       logged-in user's email
+     * @param receiverProfileId target profile ID
      */
     @Transactional
     public void sendInterest(String senderEmail, Long receiverProfileId) {
@@ -95,11 +95,11 @@ public class InterestService {
      * Accept an incoming interest request.
      *
      * Business rules:
-     *   - Only the RECEIVER of the request can accept
-     *   - Request must currently be PENDING
+     * - Only the RECEIVER of the request can accept
+     * - Request must currently be PENDING
      *
-     * @param receiverEmail  logged-in user's email (must be the receiver)
-     * @param interestId     the interest request ID
+     * @param receiverEmail logged-in user's email (must be the receiver)
+     * @param interestId    the interest request ID
      */
     @Transactional
     public void acceptInterest(String receiverEmail, Long interestId) {
@@ -116,7 +116,8 @@ public class InterestService {
 
         // Can only accept PENDING requests
         if (interest.getStatus() != InterestRequest.Status.PENDING) {
-            throw new BadRequestException("This request has already been " + interest.getStatus().name().toLowerCase() + ".");
+            throw new BadRequestException(
+                    "This request has already been " + interest.getStatus().name().toLowerCase() + ".");
         }
 
         interest.setStatus(InterestRequest.Status.ACCEPTED);
@@ -132,11 +133,11 @@ public class InterestService {
      * Decline an incoming interest request.
      *
      * Business rules:
-     *   - Only the RECEIVER of the request can decline
-     *   - Request must currently be PENDING
+     * - Only the RECEIVER of the request can decline
+     * - Request must currently be PENDING
      *
-     * @param receiverEmail  logged-in user's email
-     * @param interestId     the interest request ID
+     * @param receiverEmail logged-in user's email
+     * @param interestId    the interest request ID
      */
     @Transactional
     public void declineInterest(String receiverEmail, Long interestId) {
@@ -153,7 +154,8 @@ public class InterestService {
 
         // Can only decline PENDING requests
         if (interest.getStatus() != InterestRequest.Status.PENDING) {
-            throw new BadRequestException("This request has already been " + interest.getStatus().name().toLowerCase() + ".");
+            throw new BadRequestException(
+                    "This request has already been " + interest.getStatus().name().toLowerCase() + ".");
         }
 
         interest.setStatus(InterestRequest.Status.DECLINED);
@@ -167,7 +169,7 @@ public class InterestService {
      * Raw entity has LAZY-loaded sender/receiver fields — Jackson cannot serialize
      * them outside a transaction, causing empty or broken JSON response.
      *
-     * @param receiverEmail  logged-in user's email
+     * @param receiverEmail logged-in user's email
      * @return list of InterestResponse DTOs
      */
     public List<InterestResponse> getReceivedInterests(String receiverEmail) {
@@ -186,7 +188,7 @@ public class InterestService {
      * Get all mutual matches for the logged-in user.
      * A match = both users have ACCEPTED each other's interest.
      *
-     * @param userEmail  logged-in user's email
+     * @param userEmail logged-in user's email
      * @return list of MatchResponse DTOs
      */
     public List<MatchResponse> getMatches(String userEmail) {
@@ -207,7 +209,8 @@ public class InterestService {
 
     /**
      * Maps InterestRequest entity → InterestResponse DTO.
-     * Eagerly reads sender fields inside the transaction to avoid lazy loading issues.
+     * Eagerly reads sender fields inside the transaction to avoid lazy loading
+     * issues.
      */
     private InterestResponse buildInterestResponse(InterestRequest interest) {
 
