@@ -33,12 +33,29 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * Register a new user with email + password.
-     * Returns JWT on success (user is auto-logged in).
+     * Step 1: Register new user (initiates registration & emails OTP).
      */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
+    public ResponseEntity<ApiResponse> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return ResponseEntity.ok(ApiResponse.success("OTP sent to your email. Please verify OTP to complete registration."));
+    }
+
+    /**
+     * Resend OTP for registration verification.
+     */
+    @PostMapping("/register/resend-otp")
+    public ResponseEntity<ApiResponse> resendRegistrationOtp(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.resendRegistrationOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("A new OTP has been sent to your email."));
+    }
+
+    /**
+     * Step 2: Verify registration OTP, activate account, and return JWT.
+     */
+    @PostMapping("/register/verify-otp")
+    public ResponseEntity<AuthResponse> verifyRegistrationOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResponse response = authService.verifyRegistrationOtp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

@@ -106,7 +106,9 @@ com.matrimonial
 ### Auth (Public)
 | Method | URL | Status |
 |---|---|---|
-| POST | /api/auth/register | ✅ |
+| POST | /api/auth/register | ✅ Sends OTP |
+| POST | /api/auth/register/resend-otp | ✅ NEW |
+| POST | /api/auth/register/verify-otp | ✅ Activates & returns JWT |
 | POST | /api/auth/login | ✅ |
 | POST | /api/auth/forgot-password | ✅ |
 | POST | /api/auth/verify-otp | ✅ |
@@ -334,6 +336,17 @@ ALTER TABLE profiles
 - `api/accountApi.js` — added `requestDeleteAccountOtp()` and updated `deleteAccount(otpCode)`
 - `context/AuthContext.jsx` — updated `deleteAccount(otpCode)` to pass OTP code
 - `pages/EditProfilePage.jsx` — built OTP verification modal with resend countdown timer for account deletion
+
+### 2026-07-05 — Registration Email OTP Verification Implementation
+
+**Backend changes:**
+- `application.properties` — updated `otp.expiry.minutes=5` (5-minute OTP validity)
+- `service/AuthService.java` — updated `register` to create inactive user & email 5-minute OTP, added `resendRegistrationOtp`, and `verifyRegistrationOtp` to activate account & issue JWT
+- `controller/AuthController.java` — updated `POST /api/auth/register` and added `POST /api/auth/register/resend-otp` and `POST /api/auth/register/verify-otp`
+
+**Frontend changes:**
+- `api/authApi.js` — added `verifyRegistrationOtp` and `resendRegistrationOtp`
+- `pages/RegisterPage.jsx` — implemented 2-step registration flow (Form → OTP Verification UI with 120-second cooldown timer)
 
 ---
 

@@ -48,26 +48,84 @@ public class AuthService {
      *   - Password is BCrypt-hashed before saving
      *   - Returns JWT immediately (user is auto-logged in after register)
      */
+    /**
+     * Step 1 of Registration: Create inactive user record & send OTP to email.
+     *
+     * Business rules:
+     *   - Email is normalized to lowercase
+     *   - If email already exists AND isActive=true → throw error
+     *   - If email exists AND isActive=false → update password and re-send OTP
+     *   - User is saved with isActive=false (cannot login until OTP is verified)
+     *   - OTP sent to user's email
+     */
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
 
-        // Normalize email — always lowercase regardless of how user typed it
         String normalizedEmail = request.getEmail().toLowerCase().trim();
 
-        if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new BadRequestException("Email is already registered. Please login.");
+        userRepository.findByEmail(normalizedEmail).ifPresent(user -> {
+            if (Boolean.TRUE.equals(user.getIsActive())) {
+                throw new BadRequestException("Email is already registered. Please login.");
+            }
+        });
+
+        User user = userRepository.findByEmail(normalizedEmail).orElseGet(() ->
+                User.builder()
+                        .email(normalizedEmail)
+                        .isActive(false)
+                        .build()
+        );
+
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setIsActive(false);
+        userRepository.save(user);
+
+        otpService.generateAndSendOtp(normalizedEmail);
+        log.info("Registration initiated & OTP sent — email={}", normalizedEmail);
+    }
+
+    /**
+     * Resend OTP for unverified registration.
+     */
+    public void resendRegistrationOtp(String email) {
+        String normalizedEmail = email.toLowerCase().trim();
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found for this email."));
+
+        if (Boolean.TRUE.equals(user.getIsActive())) {
+            throw new BadRequestException("Email is already registered and verified. Please login.");
         }
 
-        User user = User.builder()
-                .email(normalizedEmail)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .isActive(true)
-                .build();
+        otpService.generateAndSendOtp(normalizedEmail);
+        log.info("Registration OTP resent — email={}", normalizedEmail);
+    }
 
+    /**
+     * Step 2 of Registration: Verify OTP, activate user account, and issue JWT.
+     */
+    @Transactional
+    public AuthResponse verifyRegistrationOtp(VerifyOtpRequest request) {
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+
+        // 1. Verify OTP code (validates expiration & unused state)
+        otpService.verifyOtp(normalizedEmail, request.getOtpCode());
+
+        // 2. Lookup inactive user
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for registration verification."));
+
+        // 3. Activate user account
+        user.setIsActive(true);
         User savedUser = userRepository.save(user);
+
+        // 4. Cleanup used OTPs
+        otpService.deleteOtpsByEmail(normalizedEmail);
+
+        // 5. Issue JWT token
         String token = jwtUtil.generateToken(savedUser.getEmail());
 
-        log.info("User registered successfully — email={}", savedUser.getEmail());
+        log.info("Registration verified & completed — email={}", savedUser.getEmail());
 
         return AuthResponse.builder()
                 .token(token)
