@@ -348,6 +348,12 @@ ALTER TABLE profiles
 - `api/authApi.js` — added `verifyRegistrationOtp` and `resendRegistrationOtp`
 - `pages/RegisterPage.jsx` — implemented 2-step registration flow (Form → OTP Verification UI with 120-second cooldown timer)
 
+### 2026-07-05 — Profile Hobbies Fix, Independent Edit Profile Sections & Are-You-Sure Delete Confirmation
+
+**Frontend changes:**
+- `components/profile/ProfileForm.jsx` — added missing `hobbies: initialData.hobbies || ''` in form state initialization so hobbies are retained and saved properly
+- `pages/EditProfilePage.jsx` — relocated Profile Photos, Partner Gender Preference, and Danger Zone sections outside tab conditional rendering so scrolling down shows them on BOTH Edit Profile and Edit Expectation tabs; added "Are you sure?" confirmation popup modal before sending account deletion email OTP
+
 ---
 
 ## ▶️ Next Session — Resume Here
@@ -357,3 +363,4 @@ ALTER TABLE profiles
 2. Fix Matches bug (receiver vs sender logic in /api/interests/matches)
 3. Admin Panel (list users, deactivate accounts)
 4. Suggestion / Bug Report Page (deferred)
+
