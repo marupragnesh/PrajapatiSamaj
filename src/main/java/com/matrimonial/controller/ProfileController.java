@@ -174,15 +174,27 @@ public class ProfileController {
     // ===== Account =====
 
     /**
-     * Permanently delete the logged-in user's account.
+     * Send OTP to the logged-in user's email for account deletion verification.
+     */
+    @PostMapping("/api/account/delete-otp")
+    public ResponseEntity<ApiResponse> sendDeleteAccountOtp(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        profileService.sendDeleteAccountOtp(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("OTP has been sent to your registered email address."));
+    }
+
+    /**
+     * Permanently delete the logged-in user's account after verifying OTP code.
      * Deletion order: photos (disk + DB) → likes → interests → preference → expectations → profile → user.
      * This action is IRREVERSIBLE.
      */
     @DeleteMapping("/api/account")
     public ResponseEntity<ApiResponse> deleteAccount(
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String otpCode) {
 
-        profileService.deleteAccount(userDetails.getUsername());
+        profileService.deleteAccount(userDetails.getUsername(), otpCode);
         return ResponseEntity.ok(ApiResponse.success("Your account has been permanently deleted."));
     }
 }

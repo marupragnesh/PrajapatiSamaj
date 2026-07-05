@@ -55,6 +55,7 @@ public class ProfileService {
     private final LikeRepository likeRepository;
     private final InterestRepository interestRepository;
     private final ProfileMapper profileMapper;
+    private final OtpService otpService;
 
     @Value("${file.upload.dir}")
     private String uploadDir;
@@ -340,12 +341,28 @@ public class ProfileService {
     // ===== Account Deletion =====
 
     /**
-     * Permanently delete the logged-in user's account.
+     * Send OTP to user's registered email for account deletion verification.
+     */
+    public void sendDeleteAccountOtp(String email) {
+        User user = getUserByEmail(email);
+        otpService.generateAndSendOtp(user.getEmail());
+        log.info("Delete account OTP requested — userId={}, email={}", user.getId(), user.getEmail());
+    }
+
+    /**
+     * Permanently delete the logged-in user's account after verifying OTP code.
      * Deletion order: photos → likes → interests → preference → expectations → profile → user
      */
     @Transactional
-    public void deleteAccount(String email) {
+    public void deleteAccount(String email, String otpCode) {
+        if (otpCode == null || otpCode.trim().isEmpty()) {
+            throw new com.matrimonial.exception.BadRequestException("OTP code is required to delete account.");
+        }
+
         User user = getUserByEmail(email);
+
+        // Verify OTP first — throws BadRequestException if invalid or expired
+        otpService.verifyOtp(user.getEmail(), otpCode.trim());
 
         profileRepository.findByUserId(user.getId()).ifPresent(profile -> {
             List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
@@ -363,6 +380,7 @@ public class ProfileService {
         preferenceRepository.findByUserId(user.getId()).ifPresent(preferenceRepository::delete);
         expectationRepository.findByUserId(user.getId()).ifPresent(expectationRepository::delete);
 
+        otpService.deleteOtpsByEmail(user.getEmail());
         userRepository.delete(user);
         log.info("Account deleted — userId={}", user.getId());
     }

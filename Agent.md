@@ -126,7 +126,8 @@ com.matrimonial
 | GET | /api/preferences | ✅ |
 | PUT | /api/preferences | ✅ |
 | GET | /api/profiles/{id} | ✅ Mobile masked |
-| DELETE | /api/account | ✅ |
+| POST | /api/account/delete-otp | ✅ NEW |
+| DELETE | /api/account?otpCode= | ✅ OTP Protected |
 
 ### Discovery (JWT Required)
 | Method | URL | Status |
@@ -322,6 +323,17 @@ ALTER TABLE profiles
 - `api/discoverApi.js` — updated `discoverProfiles` to pass non-empty filter parameters
 - `components/discover/FilterPopup.jsx` — created popup modal component with 4 filter fields, staging state with "Apply Filters" button, individual X clear buttons, and Clear All
 - `pages/DiscoverPage.jsx` — integrated Filter button with active filter counter badge, active filter chips bar, and FilterPopup modal
+
+### 2026-07-05 — OTP-Verified Account Deletion Implementation
+
+**Backend changes:**
+- `service/ProfileService.java` — added `sendDeleteAccountOtp(email)` and updated `deleteAccount(email, otpCode)` to verify OTP before purging profile data
+- `controller/ProfileController.java` — added `POST /api/account/delete-otp` and updated `DELETE /api/account` to accept `@RequestParam String otpCode`
+
+**Frontend changes:**
+- `api/accountApi.js` — added `requestDeleteAccountOtp()` and updated `deleteAccount(otpCode)`
+- `context/AuthContext.jsx` — updated `deleteAccount(otpCode)` to pass OTP code
+- `pages/EditProfilePage.jsx` — built OTP verification modal with resend countdown timer for account deletion
 
 ---
 
