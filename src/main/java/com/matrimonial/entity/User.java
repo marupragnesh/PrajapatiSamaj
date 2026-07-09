@@ -36,6 +36,12 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(name = "name", length = 50)
+    private String name;
+
+    @Column(name = "surname", length = 50)
+    private String surname;
+
     // Admin can deactivate a user account (soft delete)
     @Column(name = "is_active", nullable = false)
     @Builder.Default

@@ -28,6 +28,9 @@ public class AuthResponse {
     // User's email — for display purposes
     private String email;
 
+    private String name;
+    private String surname;
+
     // Simple message like "Login successful" or "Registration successful"
     private String message;
 }

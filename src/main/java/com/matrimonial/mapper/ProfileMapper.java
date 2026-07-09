@@ -69,6 +69,8 @@ public class ProfileMapper {
         return ProfileResponse.builder()
                 .profileId(profile.getId())
                 .userId(profile.getUser().getId())
+                .name(profile.getName())
+                .surname(profile.getSurname())
                 .fullName(profile.getFullName())
                 .age(profile.getAge())
                 .gender(profile.getGender())

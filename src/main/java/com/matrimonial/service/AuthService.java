@@ -131,6 +131,8 @@ public class AuthService {
                 .token(token)
                 .userId(savedUser.getId())
                 .email(savedUser.getEmail())
+                .name(savedUser.getName())
+                .surname(savedUser.getSurname())
                 .message("Registration successful! Please complete your profile.")
                 .build();
     }
@@ -176,6 +178,8 @@ public class AuthService {
                 .token(token)
                 .userId(user.getId())
                 .email(user.getEmail())
+                .name(user.getName())
+                .surname(user.getSurname())
                 .message("Login successful!")
                 .build();
     }

@@ -75,7 +75,9 @@ public class ProfileService {
 
         Profile profile = Profile.builder()
                 .user(user)
-                .fullName(request.getFullName())
+                .name(request.getName().trim())
+                .surname(request.getSurname().trim())
+                .fullName(request.getName().trim() + " " + request.getSurname().trim())
                 .age(request.getAge())
                 .gender(request.getGender())
                 .maritalStatus(request.getMaritalStatus())
@@ -100,6 +102,11 @@ public class ProfileService {
                 .isComplete(true)
                 .build();
 
+        // Synchronize name and surname to the user table
+        user.setName(request.getName().trim());
+        user.setSurname(request.getSurname().trim());
+        userRepository.save(user);
+
         Profile saved = profileRepository.save(profile);
         log.info("Profile created — userId={}", saved.getUser().getId());
         return profileMapper.toProfileResponse(saved, true);
@@ -113,7 +120,9 @@ public class ProfileService {
         Profile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found. Please create your profile first."));
 
-        profile.setFullName(request.getFullName());
+        profile.setName(request.getName().trim());
+        profile.setSurname(request.getSurname().trim());
+        profile.setFullName(request.getName().trim() + " " + request.getSurname().trim());
         profile.setAge(request.getAge());
         profile.setGender(request.getGender());
         profile.setMaritalStatus(request.getMaritalStatus());
@@ -137,6 +146,10 @@ public class ProfileService {
         profile.setDescription(request.getDescription());
         profile.setIsComplete(true);
 
+        // Synchronize name and surname to the user table
+        user.setName(request.getName().trim());
+        user.setSurname(request.getSurname().trim());
+        userRepository.save(user);
 
         Profile saved = profileRepository.save(profile);
         log.info("Profile updated — userId={}", saved.getUser().getId());

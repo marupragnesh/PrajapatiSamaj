@@ -132,10 +132,63 @@ Starting: EditProfilePage.jsx
 Done: EditProfilePage.jsx
 Starting: Agent.md
 Done: Agent.md
+Feature: Separate Name & Surname during Registration and Surname Filter
+Questions asked: None
+Answers given: N/A
+Plan: RegisterRequest.java, User.java, AuthResponse.java, AuthService.java, Profile.java, ProfileRequest.java, ProfileResponse.java, ProfileMapper.java, ProfileService.java, DiscoverFilterRequest.java, ProfileSpecification.java, authApi.js, RegisterForm.jsx, RegisterPage.jsx, ProfileForm.jsx, FilterPopup.jsx, DiscoverPage.jsx, Agent.md, agent1.txt
+Starting: RegisterRequest.java
+Done: RegisterRequest.java
+Starting: User.java
+Done: User.java
+Starting: AuthResponse.java
+Done: AuthResponse.java
+Starting: AuthService.java
+Done: AuthService.java
+Starting: Profile.java
+Done: Profile.java
+Starting: ProfileRequest.java
+Done: ProfileRequest.java
+Starting: ProfileResponse.java
+Done: ProfileResponse.java
+Starting: ProfileMapper.java
+Done: ProfileMapper.java
+Starting: ProfileService.java
+Done: ProfileService.java
+Starting: DiscoverFilterRequest.java
+Done: DiscoverFilterRequest.java
+Starting: ProfileSpecification.java
+Done: ProfileSpecification.java
+Starting: authApi.js
+Done: authApi.js
+Starting: RegisterForm.jsx
+Done: RegisterForm.jsx
+Starting: RegisterPage.jsx
+Done: RegisterPage.jsx
+Starting: ProfileForm.jsx
+Done: ProfileForm.jsx
+Starting: FilterPopup.jsx
+Done: FilterPopup.jsx
+Starting: DiscoverPage.jsx
+Done: DiscoverPage.jsx
+Starting: Agent.md
+Done: Agent.md
 
-
-
-
-
-
+Feature: Remove Name and Surname from registration page
+Questions asked: None
+Answers given: N/A
+Plan: RegisterRequest.java, AuthService.java, ProfileService.java, authApi.js, RegisterForm.jsx, RegisterPage.jsx, Agent.md
+Starting: RegisterRequest.java
+Done: RegisterRequest.java
+Starting: AuthService.java
+Done: AuthService.java
+Starting: ProfileService.java
+Done: ProfileService.java
+Starting: authApi.js
+Done: authApi.js
+Starting: RegisterForm.jsx
+Done: RegisterForm.jsx
+Starting: RegisterPage.jsx
+Done: RegisterPage.jsx
+Starting: Agent.md
+Done: Agent.md
 

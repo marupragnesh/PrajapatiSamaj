@@ -35,6 +35,12 @@ public class Profile {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Column(name = "name", length = 50)
+    private String name;
+
+    @Column(name = "surname", length = 50)
+    private String surname;
+
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 

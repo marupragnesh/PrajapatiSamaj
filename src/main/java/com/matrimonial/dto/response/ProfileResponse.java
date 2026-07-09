@@ -31,6 +31,8 @@ public class ProfileResponse {
 
     private Long profileId;
     private Long userId;
+    private String name;
+    private String surname;
     private String fullName;
     private Integer age;
     private Gender gender;

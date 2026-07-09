@@ -25,4 +25,5 @@ public class DiscoverFilterRequest {
     private String minHeight;
     private String maxHeight;
     private Diet diet;
+    private String surname;
 }

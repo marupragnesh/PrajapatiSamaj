@@ -64,6 +64,14 @@ public class ProfileSpecification {
                     predicates.add(criteriaBuilder.equal(root.get("diet"), filter.getDiet()));
                 }
 
+                // Surname (trimmed and case-insensitive matching)
+                if (hasValue(filter.getSurname())) {
+                    predicates.add(criteriaBuilder.equal(
+                            criteriaBuilder.lower(criteriaBuilder.trim(root.get("surname"))),
+                            filter.getSurname().trim().toLowerCase()
+                    ));
+                }
+
                 // Height Range
                 if (hasValue(filter.getMinHeight()) || hasValue(filter.getMaxHeight())) {
                     List<String> validHeights = getHeightsInRange(filter.getMinHeight(), filter.getMaxHeight());

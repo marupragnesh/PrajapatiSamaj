@@ -96,6 +96,7 @@ com.matrimonial
 | 33 | Family Details & Profile Description | ✅ Done | Added father/mother name (mandatory) & occupations (optional), description, and mobileNo display in profile section |
 | 34 | Photo Grid Wrap & Instagram Profile Header | ✅ Done | Wrapped photo thumbnails in grid (no scrollbar) & added DP avatar, user email, Edit Profile / Edit Expectation tabs |
 | 35 | Discover Page Filters | ✅ Done | Age range, Marital status, Height range, Diet filters with live updates, clear buttons & popup modal |
+| 36 | Remove Name & Surname from Register | ✅ Done | Ask only during profile setup, remove validation and fields from register frontend & backend, sync to User table on profile save |
 
 
 
@@ -245,6 +246,19 @@ ALTER TABLE profiles
   ADD COLUMN address_line  VARCHAR(255) NULL,
   ADD COLUMN state         VARCHAR(100) NULL,
   ADD COLUMN pincode       VARCHAR(6) NULL;
+
+-- NEW: Separate Name & Surname
+ALTER TABLE users
+  ADD COLUMN name          VARCHAR(50) NULL,
+  ADD COLUMN surname       VARCHAR(50) NULL;
+
+ALTER TABLE profiles
+  ADD COLUMN name          VARCHAR(50) NULL,
+  ADD COLUMN surname       VARCHAR(50) NULL;
+
+-- Populate name & surname from existing full_name
+UPDATE profiles SET name = SUBSTRING_INDEX(full_name, ' ', 1), surname = SUBSTRING_INDEX(full_name, ' ', -1) WHERE name IS NULL OR name = '';
+UPDATE users u JOIN profiles p ON u.id = p.user_id SET u.name = p.name, u.surname = p.surname WHERE u.name IS NULL OR u.name = '';
 ```
 
 ---
@@ -354,13 +368,47 @@ ALTER TABLE profiles
 - `components/profile/ProfileForm.jsx` — added missing `hobbies: initialData.hobbies || ''` in form state initialization so hobbies are retained and saved properly
 - `pages/EditProfilePage.jsx` — relocated Profile Photos, Partner Gender Preference, and Danger Zone sections outside tab conditional rendering so scrolling down shows them on BOTH Edit Profile and Edit Expectation tabs; added "Are you sure?" confirmation popup modal before sending account deletion email OTP
 
+### 2026-07-07 — Separate Name & Surname and Surname Filter
+
+**Backend changes:**
+- `dto/request/RegisterRequest.java` — added `name` and `surname` fields
+- `entity/User.java` — added `name` and `surname` fields
+- `dto/response/AuthResponse.java` — added `name` and `surname` fields
+- `service/AuthService.java` — save name/surname to User entity on register and map to AuthResponse on login/verification
+- `entity/Profile.java` — added `name` and `surname` fields
+- `dto/request/ProfileRequest.java` — added `name` and `surname` fields (made `fullName` optional)
+- `dto/response/ProfileResponse.java` — added `name` and `surname` fields
+- `mapper/ProfileMapper.java` — map `name` and `surname` from Profile entity to response DTO
+- `service/ProfileService.java` — populate name/surname and construct `fullName` automatically from name and surname
+- `dto/request/DiscoverFilterRequest.java` — added optional `surname` parameter
+- `repository/specification/ProfileSpecification.java` — add dynamic case-insensitive exact matching trimmed surname filter
+
+**Frontend changes:**
+- `api/authApi.js` — update `registerUser` payload
+- `components/auth/RegisterForm.jsx` — added Name and Surname fields with validations
+- `pages/RegisterPage.jsx` — pass name and surname inputs on register submit
+- `components/profile/ProfileForm.jsx` — replaced Full Name input with First Name and Surname inputs with validation and backward compatibility split fallback logic
+- `pages/ProfileSetupPage.jsx` — retrieve and pre-populate user name and surname from auth context
+- `components/discover/FilterPopup.jsx` — added Surname textbox filter
+- `pages/DiscoverPage.jsx` — sync surname filter state, chips, and clear action
+
+### 2026-07-09 — Remove Name & Surname from Register Page
+
+**Backend changes:**
+- `dto/request/RegisterRequest.java` — removed validation annotations and fields for name/surname
+- `service/AuthService.java` — stopped setting name/surname during registration
+- `service/ProfileService.java` — synchronized name/surname changes from Profile creation and update to the associated User entity (users table)
+
+**Frontend changes:**
+- `api/authApi.js` — updated `registerUser` payload to exclude name and surname
+- `components/auth/RegisterForm.jsx` — removed Name and Surname input fields, states, and validations
+- `pages/RegisterPage.jsx` — updated submit handler to exclude name and surname
+
 ---
 
 ## ▶️ Next Session — Resume Here
 
 **Priority order:**
-1. ⚠️ Run the DB migration SQL above before starting the backend
-2. Fix Matches bug (receiver vs sender logic in /api/interests/matches)
-3. Admin Panel (list users, deactivate accounts)
-4. Suggestion / Bug Report Page (deferred)
-
+1. Fix Matches bug (receiver vs sender logic in /api/interests/matches)
+2. Admin Panel (list users, deactivate accounts)
+3. Suggestion / Bug Report Page (deferred)

@@ -17,8 +17,14 @@ import lombok.Data;
 @Data
 public class ProfileRequest {
 
-    @NotBlank(message = "Full name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @NotBlank(message = "Name is required")
+    @Size(max = 50, message = "Name must not exceed 50 characters")
+    private String name;
+
+    @NotBlank(message = "Surname is required")
+    @Size(max = 50, message = "Surname must not exceed 50 characters")
+    private String surname;
+
     private String fullName;
 
     @NotNull(message = "Age is required")
