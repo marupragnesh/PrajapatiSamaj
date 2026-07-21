@@ -20,6 +20,9 @@ import java.util.List;
  * mobileNo: masked (e.g. "98********") when viewing another user's profile;
  *           full number only when the viewer is the profile owner.
  *           Masking decision is made in ProfileService — not here.
+ * isMobileUnlocked: companion boolean for mobileNo — true when the viewer sees
+ *           the real number, false when masked. Lets the frontend show an
+ *           Unlock Contact button without parsing the string for asterisks.
  *
  * Layer: DTO (data transfer only, no logic)
  */
@@ -39,6 +42,7 @@ public class ProfileResponse {
     private MaritalStatus maritalStatus;
     private String city;
     private String mobileNo;       // masked unless viewer is the owner
+    private Boolean isMobileUnlocked; // true = real number shown (owner or paid); false = masked. Frontend uses this to decide whether to show the Unlock Contact button.
     private String addressLine;
     private String state;
     private String pincode;

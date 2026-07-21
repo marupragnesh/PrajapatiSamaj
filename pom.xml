@@ -101,6 +101,15 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ===== PAYMENT (Razorpay) ===== -->
+
+        <!-- Razorpay Java SDK: used by PaymentService to create orders (order creation only — signature verification is done manually via HMAC-SHA256, no SDK call needed for that) -->
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.4.8</version>
+        </dependency>
+
         <!-- ===== TESTING ===== -->
 
         <!-- Spring Boot Test: JUnit 5, MockMvc, Mockito -->

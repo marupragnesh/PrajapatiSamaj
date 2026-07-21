@@ -166,8 +166,15 @@ public class ProfileService {
         return profileMapper.toProfileResponse(profile, true);
     }
 
-    /** Get another user's profile by profile ID (only complete profiles) — mobile number masked. */
-    public ProfileResponse getProfileById(Long profileId) {
+    /**
+     * Get another user's profile by profile ID (only complete profiles).
+     * Mobile number is masked UNLESS the viewer has paid to unlock CONTACT_UNLOCK
+     * (see ProfileMapper.maskMobileIfNeeded — account-wide unlock).
+     *
+     * @param viewerEmail email of the logged-in user viewing this profile,
+     *                     used only for the contact-unlock payment check
+     */
+    public ProfileResponse getProfileById(Long profileId, String viewerEmail) {
         Profile profile = profileRepository.findById(profileId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found."));
 
@@ -175,7 +182,8 @@ public class ProfileService {
             throw new ResourceNotFoundException("Profile not available.");
         }
 
-        return profileMapper.toProfileResponse(profile, false);
+        User viewer = getUserByEmail(viewerEmail);
+        return profileMapper.toProfileResponse(profile, false, viewer);
     }
 
     // ===== Photos =====

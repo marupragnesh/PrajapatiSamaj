@@ -164,10 +164,16 @@ public class ProfileController {
 
     // ===== Other Users =====
 
-    /** View another user's profile by profile ID. Only complete profiles are visible. */
+    /**
+     * View another user's profile by profile ID. Only complete profiles are visible.
+     * Mobile number is masked unless the logged-in viewer has paid to unlock
+     * CONTACT_UNLOCK (checked in ProfileService.getProfileById).
+     */
     @GetMapping("/api/profiles/{profileId}")
-    public ResponseEntity<ProfileResponse> getProfileById(@PathVariable Long profileId) {
-        ProfileResponse response = profileService.getProfileById(profileId);
+    public ResponseEntity<ProfileResponse> getProfileById(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long profileId) {
+        ProfileResponse response = profileService.getProfileById(profileId, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 

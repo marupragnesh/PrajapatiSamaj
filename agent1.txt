@@ -192,3 +192,126 @@ Done: RegisterPage.jsx
 Starting: Agent.md
 Done: Agent.md
 
+Feature: Razorpay Payment Integration - Contact Unlock (extensible to future locked features)
+Questions asked: what is payment for; where does Pay button live; do you have real Razorpay test keys; per-profile or account-wide unlock; unlock price
+Answers given: wire up end-to-end now, decide other uses later; Profile Detail page to unlock mobile number; yes, user will set own key/secret; account-wide unlock (pay once, see everyone's full number); Rs99 (9900 paise)
+Design decision: generic Payment entity with a `feature` enum column (CONTACT_UNLOCK now, DISCOVER_FILTERS reserved for future) and one reusable PaymentService.hasUnlocked(user, feature) gate method, so future features can be locked by checking the same method instead of rewriting payment logic. Mobile masking becomes conditional on hasUnlocked(viewer, CONTACT_UNLOCK) instead of always-masked-for-non-owner.
+Plan:
+  Backend (11 files):
+    - entity/Payment.java
+    - entity/enums/PaymentFeature.java
+    - entity/enums/PaymentStatus.java
+    - repository/PaymentRepository.java
+    - dto/request/CreateOrderRequest.java
+    - dto/request/VerifyPaymentRequest.java
+    - dto/response/OrderResponse.java
+    - dto/response/PaymentVerifyResponse.java
+    - config/RazorpayConfig.java
+    - service/PaymentService.java
+    - controller/PaymentController.java
+  Backend modified (3 files):
+    - mapper/ProfileMapper.java (conditional masking via PaymentService.hasUnlocked)
+    - application.properties (razorpay.key.id, razorpay.key.secret placeholders - real values set by user, never written by agent)
+    - pom.xml (add com.razorpay:razorpay-java dependency)
+  Frontend (2 new files):
+    - api/paymentApi.js
+    - components/payment/UnlockContactButton.jsx
+  Frontend modified (2 files):
+    - pages/ProfileDetailPage.jsx (render UnlockContactButton when number is masked)
+    - index.html (add Razorpay checkout.js script tag)
+  DB migration: new payments table (manual SQL, nullable-safe)
+  Security note: agent never writes real key/secret values into any file; only placeholder property names
+Starting: pom.xml
+Done: pom.xml
+Starting: PaymentFeature.java
+Done: PaymentFeature.java
+Starting: PaymentStatus.java
+Done: PaymentStatus.java
+Starting: Payment.java
+Done: Payment.java
+Starting: PaymentRepository.java
+Done: PaymentRepository.java
+Starting: CreateOrderRequest.java
+Done: CreateOrderRequest.java (security fix vs pasted spec: amount is looked up server-side from feature, never trusted from frontend request body)
+Starting: VerifyPaymentRequest.java
+Done: VerifyPaymentRequest.java
+Starting: OrderResponse.java
+Done: OrderResponse.java
+Starting: PaymentVerifyResponse.java
+Done: PaymentVerifyResponse.java
+Starting: RazorpayConfig.java
+Done: RazorpayConfig.java
+Starting: PaymentService.java
+Done: PaymentService.java (security notes: server-side price map keyed by feature enum; constant-time MessageDigest.isEqual for signature comparison instead of plain string equals)
+Starting: PaymentController.java
+Done: PaymentController.java
+Starting: ProfileMapper.java (modify)
+Done: ProfileMapper.java (added 3-arg overload toProfileResponse(profile, isOwnProfile, viewer), old 2-arg version preserved unchanged for getMyProfile call site)
+Starting: ProfileService.java (modify: getProfileById)
+Done: ProfileService.java (getProfileById signature changed from (Long) to (Long, String viewerEmail) - breaking change, controller call site must be updated in same feature)
+Starting: ProfileController.java (modify: getProfileById call site)
+Done: ProfileController.java (added UserDetails param to getProfileById, no new access-control change - endpoint was already JWT-protected by SecurityConfig)
+Starting: DiscoverService.java (modify: pass viewer into mapper)
+Done: DiscoverService.java (non-breaking - currentUser already loaded, now passed as viewer. Note: account-wide unlock means Discover list page will also show full numbers once unlocked, not just Profile Detail page)
+Starting: application.properties (modify: add razorpay placeholders)
+
+Feature: Razorpay Contact Unlock - Frontend wiring + resume (session resumed, backend was already complete)
+Questions asked: how should frontend detect a masked mobile number to show the Unlock button - pattern-check the string vs add isMobileUnlocked boolean to ProfileResponse
+Answers given: add isMobileUnlocked boolean to ProfileResponse (reopens ProfileMapper.java + ProfileResponse.java, both already marked Done, for a small additive change)
+Plan:
+  Backend modified (2 files, reopened - additive only):
+    - dto/response/ProfileResponse.java (add Boolean isMobileUnlocked field)
+    - mapper/ProfileMapper.java (extract shared unlocked-check helper, set isMobileUnlocked on builder)
+  Backend (1 file, resume interrupted step):
+    - application.properties (add razorpay.key.id / razorpay.key.secret as blank placeholders only, no real values)
+  Frontend (2 new files):
+    - src/api/paymentApi.js
+    - src/components/payment/UnlockContactButton.jsx
+  Frontend modified (2 files):
+    - src/pages/ProfileDetailPage.jsx (show UnlockContactButton when isMobileUnlocked is false)
+    - index.html (add Razorpay checkout.js script tag)
+Starting: application.properties (resume: add razorpay.key.id / razorpay.key.secret placeholders)
+Done: application.properties (added razorpay.key.id and razorpay.key.secret as blank placeholder properties only - real values must be filled in by user, agent never wrote a real key/secret)
+Starting: ProfileResponse.java (modify: add isMobileUnlocked field)
+Done: ProfileResponse.java (added Boolean isMobileUnlocked field + docstring, additive only, no existing field touched)
+Starting: ProfileMapper.java (modify: extract shared unlocked-check helper, set isMobileUnlocked)
+Done: ProfileMapper.java (extracted isMobileUnlocked(isOwnProfile, viewer) helper, maskMobileIfNeeded now delegates to it so masking string and boolean flag can never disagree; wired into builder. Edge case: if mobileNo itself is null, isMobileUnlocked still computes true/false but frontend already gates Contact Info section on mobileNo truthiness, so this is harmless.)
+Starting: src/api/paymentApi.js
+Done: src/api/paymentApi.js (createOrder(feature), verifyPayment(payload) - matches likeApi.js conventions, shared axiosInstance + logger)
+Starting: src/components/payment/UnlockContactButton.jsx
+Done: src/components/payment/UnlockContactButton.jsx (created components/payment/ dir first; full create-order -> Razorpay checkout -> verify-payment flow; only calls onUnlocked() when backend returns success:true, never on modal-closed or payment.failed events - those just reset the loading state)
+Starting: src/pages/ProfileDetailPage.jsx (modify: show UnlockContactButton when isMobileUnlocked is false)
+Done: src/pages/ProfileDetailPage.jsx (imported UnlockContactButton; extracted fetchProfile out of useEffect into a callable function so onUnlocked can re-fetch and flip isMobileUnlocked without full page reload; added isRefetch param to skip full-page spinner on re-fetch so button doesn't flicker; Contact Info now renders UnlockContactButton instead of raw masked string when isMobileUnlocked is false; updated stale 'Phase 1 - no contact info shown' docstring. Scope note: added isRefetch spinner-skip behavior beyond literal ask, for UX - re-fetching would otherwise blank the whole page right after the unlock success toast.)
+Starting: index.html (modify: add Razorpay checkout.js script tag)
+Done: index.html (added checkout.js script tag before main.jsx module script so window.Razorpay is available before React mounts)
+Feature complete: Razorpay Contact Unlock - all 7 files done, code side fully wired. REMAINING (not code, user action): fill real razorpay.key.id / razorpay.key.secret in application.properties from Razorpay test dashboard, and add a `payments` table via manual SQL if ddl-auto=update does not pick up the Payment entity automatically on next boot.
+
+Bugfix: application.properties - user had pasted real keys wrapped in ${...} (e.g. razorpay.key.id=${rzp_test_...}), which is Spring placeholder syntax for referencing another property, not literal-value syntax. @Value("${razorpay.key.id}") in RazorpayConfig.java reads the property value as-is with no further placeholder resolution, so RazorpayClient was being built with the literal string "${rzp_test_...}" including braces - causing createOrder() to throw and the frontend to show "Could not start payment". Fix: removed the ${ } wrapper, keys now written as plain KEY=VALUE. No other file touched.
+
+Investigation: after ${} fix, createOrder still failing with 400 - backend log shows "reason=BAD_REQUEST_ERROR:Authentication failed" from Razorpay itself. User regenerated fresh keys, restarted backend fully - same error persisted. Ruled out: whitespace/encoding in properties file (byte-checked clean), conflicting profile properties files (none exist, only application.properties + logback-spring.xml), stale JVM/bean caching (full restart confirmed), colon/non-ASCII corruption in keys (checked programmatically, clean), key shown Active on Razorpay dashboard, account fully verified. User provided a working reference project at D:\Projects\payment using the SAME original keys (rzp_test_RXzJBymDlus7WL / 8I8l4yxmOpqP75UoFWF7EZHD) in plain KEY=VALUE form - confirming these specific keys are genuinely valid and the ${} fix was correct. One concrete code difference found: reference project pins razorpay-java 1.4.8, PrajapatiSamaj pins 1.4.5, with identical RazorpayClient(keyId, keySecret) construction in both. Bumped PrajapatiSamaj's pom.xml to 1.4.8 to match, as a test - NOT yet confirmed as the actual fix, pending user rebuild + retry.
+
+Update: user ran mvn clean install (via IntelliJ bundled Maven, since mvn was not on system PATH) and fully restarted - version bump to 1.4.8 did NOT fix the error, still "Authentication failed". This rules out SDK version as the cause.
+
+Critical gap found: application.properties had been left on the REGENERATED key pair (rzp_test_TCAAvxaFrTBnuz / L6rGhLz9sbA0JETGfMQmKi6R) this whole time - the earlier recommendation to switch back to the original, reference-project-proven-working keys (rzp_test_RXzJBymDlus7WL / 8I8l4yxmOpqP75UoFWF7EZHD) was never actually carried out. This means every test since the reference-project discovery was still run against an unvalidated key pair, not the proven one. Corrected application.properties to use the proven keys just now. NEXT: user needs to restart backend (properties only read on boot) and retry - this is the first genuine test of proven-working keys in PrajapatiSamaj itself.
+
+Feature: Configurable RazorpayProperties for reliable access to key ID and secret
+Questions asked: None
+Answers given: N/A
+Plan: RazorpayProperties.java, RazorpayConfig.java, PaymentService.java, Agent.md, agent1.txt
+Starting: RazorpayProperties.java
+Done: RazorpayProperties.java
+Starting: RazorpayConfig.java
+Done: RazorpayConfig.java
+Starting: PaymentService.java
+Done: PaymentService.java
+Starting: Agent.md
+Done: Agent.md
+
+
+
+
+
+
+
+
+

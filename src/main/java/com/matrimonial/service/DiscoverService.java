@@ -76,9 +76,11 @@ public class DiscoverService {
         log.info("Discover profiles requested — userId={}, page={}, size={}, filter={}, resultCount={}",
                 currentUser.getId(), page, size, filter, profilePage.getNumberOfElements());
 
-        // isOwnProfile = false — these are other users' profiles (mobile masked)
+        // isOwnProfile = false — these are other users' profiles. currentUser is
+        // passed as viewer so ProfileMapper can check CONTACT_UNLOCK and show
+        // full mobile numbers if this user has paid (account-wide unlock).
         return profilePage.getContent().stream()
-                .map(profile -> profileMapper.toProfileResponse(profile, false))
+                .map(profile -> profileMapper.toProfileResponse(profile, false, currentUser))
                 .collect(Collectors.toList());
     }
 

@@ -7,8 +7,11 @@ import com.matrimonial.dto.response.ProfileSearchResultDto;
 import com.matrimonial.entity.Expectation;
 import com.matrimonial.entity.Profile;
 import com.matrimonial.entity.ProfilePhoto;
+import com.matrimonial.entity.User;
+import com.matrimonial.entity.enums.PaymentFeature;
 import com.matrimonial.repository.ExpectationRepository;
 import com.matrimonial.repository.PhotoRepository;
+import com.matrimonial.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -36,15 +39,32 @@ public class ProfileMapper {
 
     private final PhotoRepository photoRepository;
     private final ExpectationRepository expectationRepository;
+    private final PaymentService paymentService;
 
     /**
-     * Build the full ProfileResponse for a profile.
+     * Build the full ProfileResponse for a profile, WITHOUT a viewer context.
+     * Used only by ProfileService.getMyProfile where the viewer is always the
+     * owner — mobile number is shown in full, no payment check needed.
      *
      * @param profile        the Profile entity to convert
      * @param isOwnProfile   true if the viewer IS this profile's owner —
      *                       controls whether mobileNo is shown in full or masked
      */
     public ProfileResponse toProfileResponse(Profile profile, boolean isOwnProfile) {
+        return toProfileResponse(profile, isOwnProfile, null);
+    }
+
+    /**
+     * Build the full ProfileResponse for a profile, WITH viewer context.
+     * Used by ProfileService.getProfileById and DiscoverService.discoverProfiles,
+     * where the viewer may not be the owner but may have paid to unlock contact info.
+     *
+     * @param profile        the Profile entity to convert
+     * @param isOwnProfile   true if the viewer IS this profile's owner
+     * @param viewer         the logged-in user viewing this profile — pass null
+     *                       only when isOwnProfile is true and no unlock check is needed
+     */
+    public ProfileResponse toProfileResponse(Profile profile, boolean isOwnProfile, User viewer) {
         List<ProfilePhoto> photos = photoRepository.findByProfileId(profile.getId());
 
         List<PhotoDto> photoDtos = photos.stream()
@@ -76,7 +96,8 @@ public class ProfileMapper {
                 .gender(profile.getGender())
                 .maritalStatus(profile.getMaritalStatus())
                 .city(profile.getCity())
-                .mobileNo(maskMobileIfNeeded(profile.getMobileNo(), isOwnProfile))
+                .mobileNo(maskMobileIfNeeded(profile.getMobileNo(), isOwnProfile, viewer))
+                .isMobileUnlocked(isMobileUnlocked(isOwnProfile, viewer))
                 .addressLine(profile.getAddressLine())
                 .state(profile.getState())
                 .pincode(profile.getPincode())
@@ -141,15 +162,31 @@ public class ProfileMapper {
 
     /**
      * Mask a mobile number as "98********" unless the viewer is the profile
-     * owner. Returns null unchanged (e.g. for legacy rows with no number yet).
+     * owner, OR the viewer has paid to unlock CONTACT_UNLOCK (account-wide —
+     * one payment unlocks every profile's number, not just this one).
+     * Returns null unchanged (e.g. for legacy rows with no number yet).
      */
-    private String maskMobileIfNeeded(String mobileNo, boolean isOwnProfile) {
+    private String maskMobileIfNeeded(String mobileNo, boolean isOwnProfile, User viewer) {
         if (mobileNo == null || mobileNo.length() < 2) {
             return mobileNo;
         }
-        if (isOwnProfile) {
+        if (isMobileUnlocked(isOwnProfile, viewer)) {
             return mobileNo;
         }
         return mobileNo.substring(0, 2) + "*".repeat(mobileNo.length() - 2);
+    }
+
+    /**
+     * Single source of truth for "does this viewer see the real mobile number?"
+     * True if the viewer owns the profile, OR has paid to unlock CONTACT_UNLOCK.
+     * Used by BOTH maskMobileIfNeeded (to decide what string to show) and the
+     * isMobileUnlocked response field (so the frontend can show an Unlock
+     * button) — kept as one method so the two can never disagree with each other.
+     */
+    private boolean isMobileUnlocked(boolean isOwnProfile, User viewer) {
+        if (isOwnProfile) {
+            return true;
+        }
+        return viewer != null && paymentService.hasUnlocked(viewer, PaymentFeature.CONTACT_UNLOCK);
     }
 }

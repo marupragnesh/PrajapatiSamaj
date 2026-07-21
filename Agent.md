@@ -404,6 +404,13 @@ UPDATE users u JOIN profiles p ON u.id = p.user_id SET u.name = p.name, u.surnam
 - `components/auth/RegisterForm.jsx` — removed Name and Surname input fields, states, and validations
 - `pages/RegisterPage.jsx` — updated submit handler to exclude name and surname
 
+### 2026-07-21 — Configurable RazorpayProperties Integration
+
+**Backend changes:**
+- `config/RazorpayProperties.java` — created strongly-typed `@ConfigurationProperties(prefix = "razorpay.key")` component with `@Value` fallbacks for `razorpay.key.id` and `razorpay.key.secret`
+- `config/RazorpayConfig.java` — updated to inject `RazorpayProperties` bean for creating `RazorpayClient`
+- `service/PaymentService.java` — updated to inject `RazorpayProperties` bean instead of individual `@Value` fields
+
 ---
 
 ## ▶️ Next Session — Resume Here
@@ -412,3 +419,4 @@ UPDATE users u JOIN profiles p ON u.id = p.user_id SET u.name = p.name, u.surnam
 1. Fix Matches bug (receiver vs sender logic in /api/interests/matches)
 2. Admin Panel (list users, deactivate accounts)
 3. Suggestion / Bug Report Page (deferred)
+
