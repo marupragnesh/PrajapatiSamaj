@@ -477,3 +477,45 @@ Done: AboutDeveloperPage.jsx
 Starting: Agent.md
 Done: Agent.md
 
+Feature: Total User Stats, Profile Accordions, Expectation Expansion, About Developer Page Reordering & Email Fix
+Questions asked: None
+Answers given: N/A
+Plan: application.properties, StatsResponse.java, StatsController.java, Expectation.java, ExpectationRequest.java, ExpectationResponse.java, ProfileMapper.java, ProfileService.java, AboutDeveloperPage.jsx, ProfileDetailPage.jsx, ExpectationsForm.jsx, Agent.md
+Starting: application.properties
+Done: application.properties
+Starting: StatsResponse.java
+Done: StatsResponse.java
+Starting: StatsController.java
+Done: StatsController.java
+Starting: Expectation.java
+Done: Expectation.java
+Starting: ExpectationRequest.java
+Done: ExpectationRequest.java
+Starting: ExpectationResponse.java
+Done: ExpectationResponse.java
+Starting: ProfileMapper.java
+Done: ProfileMapper.java
+Starting: ProfileService.java
+Done: ProfileService.java
+Starting: AboutDeveloperPage.jsx
+Done: AboutDeveloperPage.jsx
+Starting: ProfileDetailPage.jsx
+Done: ProfileDetailPage.jsx
+Starting: ExpectationsForm.jsx
+Done: ExpectationsForm.jsx
+Starting: Agent.md
+Done: Agent.md
+
+Feature: Fix Delete Account Foreign Key Constraint Violation on Payments Table
+Questions asked: None
+Answers given: N/A
+Plan: PaymentRepository.java, ProfileService.java, Agent.md
+Starting: PaymentRepository.java
+Done: PaymentRepository.java
+Starting: ProfileService.java
+Done: ProfileService.java
+Starting: Agent.md
+Done: Agent.md
+
+
+

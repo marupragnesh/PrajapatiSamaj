@@ -57,6 +57,23 @@ public class Expectation {
     @Column(name = "preferred_city", length = 100)
     private String preferredCity;
 
+    @Column(name = "preferred_state", length = 100)
+    private String preferredState;
+
+    // ── Horoscope preferences ──
+    @Column(name = "preferred_has_mangal")
+    private Boolean preferredHasMangal;
+
+    @Column(name = "preferred_has_sani")
+    private Boolean preferredHasSani;
+
+    // ── Weight preference (in kg) ──
+    @Column(name = "preferred_min_weight")
+    private Integer preferredMinWeight;
+
+    @Column(name = "preferred_max_weight")
+    private Integer preferredMaxWeight;
+
     // ── Education & Profession ──
     @Column(name = "preferred_education", length = 150)
     private String preferredEducation;

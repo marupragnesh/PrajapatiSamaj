@@ -56,6 +56,7 @@ public class ProfileService {
     private final InterestRepository interestRepository;
     private final ProfileMapper profileMapper;
     private final OtpService otpService;
+    private final PaymentRepository paymentRepository;
 
     @Value("${file.upload.dir}")
     private String uploadDir;
@@ -340,6 +341,11 @@ public class ProfileService {
         expectation.setPreferredMinHeight(request.getPreferredMinHeight());
         expectation.setPreferredMaxHeight(request.getPreferredMaxHeight());
         expectation.setPreferredCity(request.getPreferredCity());
+        expectation.setPreferredState(request.getPreferredState());
+        expectation.setPreferredHasMangal(request.getPreferredHasMangal());
+        expectation.setPreferredHasSani(request.getPreferredHasSani());
+        expectation.setPreferredMinWeight(request.getPreferredMinWeight());
+        expectation.setPreferredMaxWeight(request.getPreferredMaxWeight());
         expectation.setPreferredEducation(request.getPreferredEducation());
         expectation.setPreferredProfession(request.getPreferredProfession());
         expectation.setPreferredIncome(request.getPreferredIncome());
@@ -416,6 +422,7 @@ public class ProfileService {
         interestRepository.deleteByReceiverId(user.getId());
         preferenceRepository.findByUserId(user.getId()).ifPresent(preferenceRepository::delete);
         expectationRepository.findByUserId(user.getId()).ifPresent(expectationRepository::delete);
+        paymentRepository.deleteByUserId(user.getId());
 
         otpService.deleteOtpsByEmail(user.getEmail());
         userRepository.delete(user);

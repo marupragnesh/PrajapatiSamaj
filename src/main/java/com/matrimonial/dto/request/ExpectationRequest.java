@@ -39,6 +39,20 @@ public class ExpectationRequest {
     @Size(max = 100, message = "Preferred city must not exceed 100 characters")
     private String preferredCity;
 
+    @Size(max = 100, message = "Preferred state must not exceed 100 characters")
+    private String preferredState;
+
+    private Boolean preferredHasMangal;
+    private Boolean preferredHasSani;
+
+    @Min(value = 30, message = "Min weight must be at least 30 kg")
+    @Max(value = 200, message = "Min weight must not exceed 200 kg")
+    private Integer preferredMinWeight;
+
+    @Min(value = 30, message = "Max weight must be at least 30 kg")
+    @Max(value = 200, message = "Max weight must not exceed 200 kg")
+    private Integer preferredMaxWeight;
+
     @Size(max = 150, message = "Preferred education must not exceed 150 characters")
     private String preferredEducation;
 

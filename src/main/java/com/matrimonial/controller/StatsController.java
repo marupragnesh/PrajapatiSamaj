@@ -35,14 +35,16 @@ public class StatsController {
     @GetMapping("/today-registrations")
     public ResponseEntity<StatsResponse> getTodayRegistrations() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-        long count = profileRepository.countByCreatedAtGreaterThanEqual(startOfDay);
+        long totalUsers = profileRepository.count();
+        long todayCount = profileRepository.countByCreatedAtGreaterThanEqual(startOfDay);
 
         StatsResponse response = StatsResponse.builder()
-                .todayRegistrationsCount(count)
+                .totalUsersCount(totalUsers)
+                .todayRegistrationsCount(todayCount)
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        log.info("Stats queried — todayRegistrationsCount={}", count);
+        log.info("Stats queried — totalUsers={}, todayRegistrationsCount={}", totalUsers, todayCount);
 
         return ResponseEntity.ok(response);
     }

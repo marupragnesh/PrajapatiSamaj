@@ -24,4 +24,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     // Used by PaymentService.hasUnlocked() — true if this user has ANY
     // successful payment for the given feature (account-wide unlock check)
     boolean existsByUserIdAndFeatureAndStatus(Long userId, PaymentFeature feature, PaymentStatus status);
+
+    // Used during account deletion to clear all payment records belonging to the user
+    void deleteByUserId(Long userId);
 }

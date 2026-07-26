@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class StatsResponse {
 
+    private long totalUsersCount;
     private long todayRegistrationsCount;
     private LocalDateTime timestamp;
 }

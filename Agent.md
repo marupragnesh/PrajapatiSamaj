@@ -99,6 +99,8 @@ com.matrimonial
 | 36 | Remove Name & Surname from Register | ✅ Done | Ask only during profile setup, remove validation and fields from register frontend & backend, sync to User table on profile save |
 | 37 | New Registration Fields, Today Stats & Legal Pages | ✅ Done | Added DOB, Birth time, Weight (int kg), Blood group, Birthplace, Gujarati Mangal/Sani toggles, Alternate number, mandatory Education/Profession, Today's profile registration count page with Refresh button, & 5 Legal Policy pages copied from Razorpay site |
 | 38 | Fix StatsController ApiResponse signature mismatch | ✅ Done | StatsController now returns ResponseEntity<StatsResponse> directly |
+| 39 | Total User Stats, Profile Accordions, Expectations Expansion & Email Fix | ✅ Done | Added total user count, collapsible profile page accordions, expanded expectation fields (State, Mangal/Shani, Weight), reordered About Developer page, & fixed Gmail SMTP SSL port 465 timeout |
+| 40 | Fix Delete Account FK Constraint Error | ✅ Done | Deletes payments associated with user prior to user entity deletion |
 
 ---
 

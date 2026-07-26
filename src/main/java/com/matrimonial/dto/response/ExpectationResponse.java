@@ -27,6 +27,11 @@ public class ExpectationResponse {
     private String preferredMinHeight;
     private String preferredMaxHeight;
     private String preferredCity;
+    private String preferredState;
+    private Boolean preferredHasMangal;
+    private Boolean preferredHasSani;
+    private Integer preferredMinWeight;
+    private Integer preferredMaxWeight;
     private String preferredEducation;
     private String preferredProfession;
     private String preferredIncome;
