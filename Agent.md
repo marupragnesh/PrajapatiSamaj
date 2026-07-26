@@ -97,17 +97,24 @@ com.matrimonial
 | 34 | Photo Grid Wrap & Instagram Profile Header | ✅ Done | Wrapped photo thumbnails in grid (no scrollbar) & added DP avatar, user email, Edit Profile / Edit Expectation tabs |
 | 35 | Discover Page Filters | ✅ Done | Age range, Marital status, Height range, Diet filters with live updates, clear buttons & popup modal |
 | 36 | Remove Name & Surname from Register | ✅ Done | Ask only during profile setup, remove validation and fields from register frontend & backend, sync to User table on profile save |
-
-
+| 37 | New Registration Fields, Today Stats & Legal Pages | ✅ Done | Added DOB, Birth time, Weight (int kg), Blood group, Birthplace, Gujarati Mangal/Sani toggles, Alternate number, mandatory Education/Profession, Today's profile registration count page with Refresh button, & 5 Legal Policy pages copied from Razorpay site |
+| 38 | Fix StatsController ApiResponse signature mismatch | ✅ Done | StatsController now returns ResponseEntity<StatsResponse> directly |
 
 ---
 
 ## 📋 REST API Endpoints
 
-### Auth (Public)
+### Auth & Public
 | Method | URL | Status |
 |---|---|---|
 | POST | /api/auth/register | ✅ Sends OTP |
+| POST | /api/auth/register/resend-otp | ✅ NEW |
+| POST | /api/auth/register/verify-otp | ✅ Activates & returns JWT |
+| POST | /api/auth/login | ✅ |
+| POST | /api/auth/forgot-password | ✅ |
+| POST | /api/auth/verify-otp | ✅ |
+| POST | /api/auth/reset-password | ✅ |
+| GET | /api/stats/today-registrations | ✅ Public endpoint returning today's profile creation count |
 | POST | /api/auth/register/resend-otp | ✅ NEW |
 | POST | /api/auth/register/verify-otp | ✅ Activates & returns JWT |
 | POST | /api/auth/login | ✅ |
@@ -423,6 +430,11 @@ UPDATE users u JOIN profiles p ON u.id = p.user_id SET u.name = p.name, u.surnam
 - `components/common/Navbar.jsx` — made `PrajapatiSamaj` brand title clickable leading to `/discover`; replaced broken lotus emoji with universal `🌸` emblem
 - `components/common/Navbar.jsx` & `pages/DiscoverPage.jsx` — updated Discover nav icon to `🧭 Discover` (Compass)
 - `pages/ProfileDetailPage.jsx` — restored masked mobile number (`99********`) with a small `ⓘ` info button opening a Premium Info Modal with upgrade link
+
+### 2026-07-26 — Generic ApiResponse<T> DTO Implementation
+
+**Backend changes:**
+- `dto/response/ApiResponse.java` — converted `ApiResponse` to generic class `ApiResponse<T>`, added `private T data;` field with `@JsonInclude(JsonInclude.Include.NON_NULL)` and `ApiResponse.success(String message, T data)` static factory method overload. Resolves compilation error in `StatsController.java` when parameterizing `ApiResponse<StatsResponse>`.
 
 ---
 

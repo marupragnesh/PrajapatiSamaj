@@ -75,4 +75,7 @@ public interface ProfileRepository extends JpaRepository<Profile, Long>, JpaSpec
             @Param("userId") Long userId,
             Pageable pageable
     );
+
+    /** Count profiles created today. */
+    long countByCreatedAtGreaterThanEqual(java.time.LocalDateTime startOfDay);
 }

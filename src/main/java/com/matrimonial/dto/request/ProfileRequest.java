@@ -6,6 +6,8 @@ import com.matrimonial.entity.enums.MaritalStatus;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 /**
  * DTO: ProfileRequest
  *
@@ -60,13 +62,43 @@ public class ProfileRequest {
     @Pattern(regexp = "^[0-9]{6}$", message = "Enter a valid 6-digit pincode")
     private String pincode;
 
+    @NotBlank(message = "Education is required")
     @Size(max = 150, message = "Education must not exceed 150 characters")
     private String education;
 
+    @NotBlank(message = "Occupation or Profession is required")
     @Size(max = 150, message = "Profession must not exceed 150 characters")
     private String profession;
 
+    // Mandatory new fields
+    @NotNull(message = "Date of birth is required")
+    private LocalDate dateOfBirth;
+
+    @NotBlank(message = "Birth time is required")
+    private String birthTime;
+
+    @NotNull(message = "Weight is required")
+    @Min(value = 1, message = "Weight must be at least 1 kg")
+    @Max(value = 300, message = "Weight must not exceed 300 kg")
+    private Integer weight;
+
+    @NotBlank(message = "Place of birth is required")
+    @Size(max = 150, message = "Birth place must not exceed 150 characters")
+    private String birthPlace;
+
+    @NotNull(message = "Mangal status is required")
+    private Boolean hasMangal;
+
+    @NotNull(message = "Sani status is required")
+    private Boolean hasSani;
+
     // ── Optional fields ──
+
+    @Size(max = 10, message = "Blood group must not exceed 10 characters")
+    private String bloodGroup;
+
+    @Pattern(regexp = "^$|^[6-9][0-9]{9}$", message = "Enter a valid 10-digit alternate mobile number")
+    private String alternateMobileNo;
 
     @Size(max = 20, message = "Height must not exceed 20 characters")
     private String height;         // e.g. "5'8\""

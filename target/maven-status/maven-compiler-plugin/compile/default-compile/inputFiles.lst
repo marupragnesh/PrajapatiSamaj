@@ -52,6 +52,7 @@ D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\entity\enums\PaymentSta
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\ApiResponse.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\repository\LikeRepository.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\service\DiscoverService.java
+D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\controller\StatsController.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\OrderResponse.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\LikerSafeView.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\entity\Like.java
@@ -62,6 +63,7 @@ D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\controller\DiscoverCont
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\entity\User.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\config\WebConfig.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\controller\AuthController.java
+D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\StatsResponse.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\service\OtpService.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\repository\PaymentRepository.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\service\AuthService.java

@@ -88,6 +88,14 @@ public class ProfileService {
                 .pincode(request.getPincode())
                 .education(request.getEducation())
                 .profession(request.getProfession())
+                .dateOfBirth(request.getDateOfBirth())
+                .birthTime(request.getBirthTime())
+                .weight(request.getWeight())
+                .bloodGroup(request.getBloodGroup())
+                .birthPlace(request.getBirthPlace())
+                .hasMangal(request.getHasMangal())
+                .hasSani(request.getHasSani())
+                .alternateMobileNo(request.getAlternateMobileNo())
                 .height(request.getHeight())
                 .income(request.getIncome())
                 .gotra(request.getGotra())
@@ -133,6 +141,14 @@ public class ProfileService {
         profile.setPincode(request.getPincode());
         profile.setEducation(request.getEducation());
         profile.setProfession(request.getProfession());
+        profile.setDateOfBirth(request.getDateOfBirth());
+        profile.setBirthTime(request.getBirthTime());
+        profile.setWeight(request.getWeight());
+        profile.setBloodGroup(request.getBloodGroup());
+        profile.setBirthPlace(request.getBirthPlace());
+        profile.setHasMangal(request.getHasMangal());
+        profile.setHasSani(request.getHasSani());
+        profile.setAlternateMobileNo(request.getAlternateMobileNo());
         profile.setHeight(request.getHeight());
         profile.setIncome(request.getIncome());
         profile.setGotra(request.getGotra());

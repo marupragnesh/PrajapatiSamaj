@@ -5,6 +5,7 @@ import com.matrimonial.entity.enums.MaritalStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -125,6 +126,38 @@ public class Profile {
     // Optional — stored as free text (similar to aboutExpectations)
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    // Mandatory — Date of Birth (date)
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    // Mandatory — Birth Time (time string e.g. "10:30 AM")
+    @Column(name = "birth_time", length = 20)
+    private String birthTime;
+
+    // Mandatory — Weight in kg (integer only)
+    @Column(name = "weight")
+    private Integer weight;
+
+    // Optional — Blood Group (e.g. "A+", "B+", etc.)
+    @Column(name = "blood_group", length = 10)
+    private String bloodGroup;
+
+    // Mandatory — Place of Birth
+    @Column(name = "birth_place", length = 150)
+    private String birthPlace;
+
+    // Mandatory — Mangal status (boolean)
+    @Column(name = "has_mangal")
+    private Boolean hasMangal;
+
+    // Mandatory — Sani status (boolean)
+    @Column(name = "has_sani")
+    private Boolean hasSani;
+
+    // Optional — Alternate 10-digit mobile number
+    @Column(name = "alternate_mobile_no", length = 10)
+    private String alternateMobileNo;
 
 
     // Profile only shows in discovery when this is true

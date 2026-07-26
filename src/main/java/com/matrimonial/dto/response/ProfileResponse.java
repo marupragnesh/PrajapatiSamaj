@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -48,6 +49,14 @@ public class ProfileResponse {
     private String pincode;
     private String education;
     private String profession;
+    private LocalDate dateOfBirth;
+    private String birthTime;
+    private Integer weight;
+    private String bloodGroup;
+    private String birthPlace;
+    private Boolean hasMangal;
+    private Boolean hasSani;
+    private String alternateMobileNo;
     private String height;
     private String income;
     private String gotra;
