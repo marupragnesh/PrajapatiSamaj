@@ -366,7 +366,7 @@ public class ProfileService {
      */
     public void sendDeleteAccountOtp(String email) {
         User user = getUserByEmail(email);
-        otpService.generateAndSendOtp(user.getEmail());
+        otpService.generateAndSendOtp(user.getEmail(), OtpService.OtpPurpose.ACCOUNT_DELETION);
         log.info("Delete account OTP requested — userId={}, email={}", user.getId(), user.getEmail());
     }
 

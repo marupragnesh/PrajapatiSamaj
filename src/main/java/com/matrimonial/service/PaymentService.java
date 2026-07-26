@@ -4,6 +4,7 @@ import com.matrimonial.config.RazorpayProperties;
 import com.matrimonial.dto.request.CreateOrderRequest;
 import com.matrimonial.dto.request.VerifyPaymentRequest;
 import com.matrimonial.dto.response.OrderResponse;
+import com.matrimonial.dto.response.PaymentStatusResponse;
 import com.matrimonial.dto.response.PaymentVerifyResponse;
 import com.matrimonial.entity.Payment;
 import com.matrimonial.entity.User;
@@ -58,7 +59,8 @@ public class PaymentService {
     // tampering with the request, since only `feature` is sent, not amount.
     private static final Map<PaymentFeature, Integer> AMOUNTS = new EnumMap<>(PaymentFeature.class);
     static {
-        AMOUNTS.put(PaymentFeature.CONTACT_UNLOCK, 9900); // Rs 99 in paise
+        AMOUNTS.put(PaymentFeature.CONTACT_UNLOCK, 9900);   // Rs 99 in paise
+        AMOUNTS.put(PaymentFeature.DISCOVER_FILTERS, 9900); // Rs 99 in paise
     }
 
     private static final String CURRENCY = "INR";
@@ -177,6 +179,20 @@ public class PaymentService {
     public boolean hasUnlocked(String email, PaymentFeature feature) {
         User user = getUserByEmail(email);
         return hasUnlocked(user, feature);
+    }
+
+    /**
+     * Get feature unlock status for the logged-in user.
+     * Single ₹99 6-month Premium Membership unlocks both Contact Numbers and Discover Filters.
+     */
+    public PaymentStatusResponse getPaymentStatus(String email) {
+        User user = getUserByEmail(email);
+        boolean isPremium = hasUnlocked(user, PaymentFeature.CONTACT_UNLOCK)
+                         || hasUnlocked(user, PaymentFeature.DISCOVER_FILTERS);
+        return PaymentStatusResponse.builder()
+                .contactUnlocked(isPremium)
+                .filtersUnlocked(isPremium)
+                .build();
     }
 
     /**

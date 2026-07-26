@@ -411,6 +411,19 @@ UPDATE users u JOIN profiles p ON u.id = p.user_id SET u.name = p.name, u.surnam
 - `config/RazorpayConfig.java` — updated to inject `RazorpayProperties` bean for creating `RazorpayClient`
 - `service/PaymentService.java` — updated to inject `RazorpayProperties` bean instead of individual `@Value` fields
 
+### 2026-07-23 — Email Templates, Clickable Brand Logo, Compass Icon & Masked Contact Info Button
+
+**Backend changes:**
+- `util/EmailTemplateUtil.java` — added dedicated HTML templates: `buildRegistrationEmail` (Registration OTP) & `buildAccountDeletionEmail` (Account Deletion OTP)
+- `service/EmailService.java` — added `sendRegistrationOtpEmail`, `sendForgotPasswordOtpEmail`, and `sendAccountDeletionOtpEmail`
+- `service/OtpService.java` — added `OtpPurpose` enum (`REGISTRATION`, `FORGOT_PASSWORD`, `ACCOUNT_DELETION`) to send purpose-appropriate emails
+- `service/AuthService.java` & `service/ProfileService.java` — updated OTP send calls to specify purpose (`REGISTRATION`, `FORGOT_PASSWORD`, `ACCOUNT_DELETION`)
+
+**Frontend changes:**
+- `components/common/Navbar.jsx` — made `PrajapatiSamaj` brand title clickable leading to `/discover`; replaced broken lotus emoji with universal `🌸` emblem
+- `components/common/Navbar.jsx` & `pages/DiscoverPage.jsx` — updated Discover nav icon to `🧭 Discover` (Compass)
+- `pages/ProfileDetailPage.jsx` — restored masked mobile number (`99********`) with a small `ⓘ` info button opening a Premium Info Modal with upgrade link
+
 ---
 
 ## ▶️ Next Session — Resume Here
@@ -419,4 +432,5 @@ UPDATE users u JOIN profiles p ON u.id = p.user_id SET u.name = p.name, u.surnam
 1. Fix Matches bug (receiver vs sender logic in /api/interests/matches)
 2. Admin Panel (list users, deactivate accounts)
 3. Suggestion / Bug Report Page (deferred)
+
 

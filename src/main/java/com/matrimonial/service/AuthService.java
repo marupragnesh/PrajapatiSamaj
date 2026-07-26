@@ -80,7 +80,7 @@ public class AuthService {
         user.setIsActive(false);
         userRepository.save(user);
 
-        otpService.generateAndSendOtp(normalizedEmail);
+        otpService.generateAndSendOtp(normalizedEmail, OtpService.OtpPurpose.REGISTRATION);
         log.info("Registration initiated & OTP sent — email={}", normalizedEmail);
     }
 
@@ -97,7 +97,7 @@ public class AuthService {
             throw new BadRequestException("Email is already registered and verified. Please login.");
         }
 
-        otpService.generateAndSendOtp(normalizedEmail);
+        otpService.generateAndSendOtp(normalizedEmail, OtpService.OtpPurpose.REGISTRATION);
         log.info("Registration OTP resent — email={}", normalizedEmail);
     }
 
@@ -196,7 +196,7 @@ public class AuthService {
             return;
         }
 
-        otpService.generateAndSendOtp(normalizedEmail);
+        otpService.generateAndSendOtp(normalizedEmail, OtpService.OtpPurpose.FORGOT_PASSWORD);
     }
 
     /**

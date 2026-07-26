@@ -3,6 +3,7 @@ package com.matrimonial.controller;
 import com.matrimonial.dto.request.CreateOrderRequest;
 import com.matrimonial.dto.request.VerifyPaymentRequest;
 import com.matrimonial.dto.response.OrderResponse;
+import com.matrimonial.dto.response.PaymentStatusResponse;
 import com.matrimonial.dto.response.PaymentVerifyResponse;
 import com.matrimonial.service.PaymentService;
 import jakarta.validation.Valid;
@@ -18,8 +19,9 @@ import org.springframework.web.bind.annotation.*;
  * Handles all Razorpay payment HTTP endpoints:
  *   POST /api/payments/create-order  - Create a Razorpay order for a feature
  *   POST /api/payments/verify        - Verify payment signature after checkout
+ *   GET  /api/payments/status        - Check unlocked features for current user
  *
- * Both endpoints require a valid JWT — payments are always tied to a
+ * All endpoints require a valid JWT — payments are always tied to a
  * logged-in user (enforced by SecurityConfig, which permits only /api/auth/**
  * without a token).
  *
@@ -49,6 +51,15 @@ public class PaymentController {
             @Valid @RequestBody VerifyPaymentRequest request) {
 
         PaymentVerifyResponse response = paymentService.verifyPayment(userDetails.getUsername(), request);
+        return ResponseEntity.ok(response);
+    }
+
+    /** Get feature unlock status for the logged-in user. */
+    @GetMapping("/status")
+    public ResponseEntity<PaymentStatusResponse> getPaymentStatus(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        PaymentStatusResponse response = paymentService.getPaymentStatus(userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 }

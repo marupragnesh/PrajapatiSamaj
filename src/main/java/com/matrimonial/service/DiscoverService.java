@@ -4,6 +4,8 @@ import com.matrimonial.dto.request.DiscoverFilterRequest;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.dto.response.ProfileSearchResultDto;
 import com.matrimonial.entity.*;
+import com.matrimonial.entity.enums.PaymentFeature;
+import com.matrimonial.exception.BadRequestException;
 import com.matrimonial.exception.ResourceNotFoundException;
 import com.matrimonial.mapper.ProfileMapper;
 import com.matrimonial.repository.*;
@@ -27,7 +29,8 @@ import java.util.stream.Collectors;
  *
  * Business rules:
  *   - discoverProfiles: only complete profiles, filtered by gender preference and optional filters
- *     (age, marital status, height, diet), excluding logged-in user, sorted newest first, paginated.
+ *     (age, marital status, height, diet, surname), excluding logged-in user, sorted newest first, paginated.
+ *   - Discover filters require PaymentFeature.DISCOVER_FILTERS unlock.
  *   - searchByName: case-insensitive partial name match across all complete
  *     profiles (excluding logged-in user). Returns lightweight DTO (name + DP).
  *
@@ -44,6 +47,7 @@ public class DiscoverService {
     private final PartnerPreferenceRepository preferenceRepository;
     private final UserRepository userRepository;
     private final ProfileMapper profileMapper;
+    private final PaymentService paymentService;
 
     /**
      * Get a paginated list of profiles matching the logged-in user's preference and optional filters.
@@ -55,6 +59,14 @@ public class DiscoverService {
      */
     public List<ProfileResponse> discoverProfiles(String email, int page, int size, DiscoverFilterRequest filter) {
         User currentUser = getUserByEmail(email);
+
+        if (filter != null && hasActiveFilters(filter)) {
+            boolean isUnlocked = paymentService.hasUnlocked(currentUser, PaymentFeature.DISCOVER_FILTERS)
+                    || paymentService.hasUnlocked(currentUser, PaymentFeature.CONTACT_UNLOCK);
+            if (!isUnlocked) {
+                throw new BadRequestException("Discover filters are a premium feature. Please upgrade your plan.");
+            }
+        }
 
         PartnerPreference preference = preferenceRepository.findByUserId(currentUser.getId())
                 .orElse(PartnerPreference.builder()
@@ -117,5 +129,16 @@ public class DiscoverService {
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+    }
+
+    private boolean hasActiveFilters(DiscoverFilterRequest f) {
+        return f.getGender() != null
+                || f.getMinAge() != null
+                || f.getMaxAge() != null
+                || f.getMaritalStatus() != null
+                || (f.getMinHeight() != null && !f.getMinHeight().isBlank())
+                || (f.getMaxHeight() != null && !f.getMaxHeight().isBlank())
+                || f.getDiet() != null
+                || (f.getSurname() != null && !f.getSurname().isBlank());
     }
 }

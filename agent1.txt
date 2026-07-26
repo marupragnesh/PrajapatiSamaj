@@ -307,6 +307,114 @@ Done: PaymentService.java
 Starting: Agent.md
 Done: Agent.md
 
+Feature: Dark mode on auth pages, separate payment page, and gated premium filters
+Questions asked: None
+Answers given: N/A
+Plan: PaymentStatusResponse.java, PaymentService.java, PaymentController.java, DiscoverService.java, paymentApi.js, ThemeToggle.jsx, PaymentPage.jsx, LoginPage.jsx, RegisterPage.jsx, ProfileDetailPage.jsx, FilterPopup.jsx, DiscoverPage.jsx, Navbar.jsx, App.jsx, Agent.md
+
+Starting: PaymentStatusResponse.java
+Done: PaymentStatusResponse.java
+Starting: PaymentService.java
+Done: PaymentService.java
+Starting: PaymentController.java
+Done: PaymentController.java
+Starting: DiscoverService.java
+Done: DiscoverService.java
+Starting: paymentApi.js
+Done: paymentApi.js
+Starting: ThemeToggle.jsx
+Done: ThemeToggle.jsx
+Starting: PaymentPage.jsx
+Done: PaymentPage.jsx
+Starting: LoginPage.jsx
+Done: LoginPage.jsx
+Starting: RegisterPage.jsx
+Done: RegisterPage.jsx
+Starting: ProfileDetailPage.jsx
+Done: ProfileDetailPage.jsx
+Starting: FilterPopup.jsx
+Done: FilterPopup.jsx
+Starting: DiscoverPage.jsx
+Done: DiscoverPage.jsx
+Starting: Navbar.jsx
+Done: Navbar.jsx
+Starting: App.jsx
+Done: App.jsx
+Starting: Agent.md
+Done: Agent.md
+
+Feature: Single 6-month Premium card (₹99 unlocks both contact & filters) and icon-only theme toggle
+Questions asked: None
+Answers given: N/A
+Plan: PaymentService.java, DiscoverService.java, ThemeToggle.jsx, PaymentPage.jsx, Agent.md
+
+Starting: PaymentService.java
+Done: PaymentService.java
+Starting: DiscoverService.java
+Done: DiscoverService.java
+Starting: ThemeToggle.jsx
+Done: ThemeToggle.jsx
+Starting: PaymentPage.jsx
+Done: PaymentPage.jsx
+Starting: Agent.md
+Done: Agent.md
+
+Feature: Move gender preference to filters, remove locked contact box, make education/profession optional, monthly salary label & placeholder 25000, mandatory diet with Veg+Egg option
+Questions asked: None
+Answers given: N/A
+Plan: Diet.java, ProfileRequest.java, DiscoverFilterRequest.java, ProfileSpecification.java, DiscoverService.java, ProfileForm.jsx, EditProfilePage.jsx, ProfileDetailPage.jsx, FilterPopup.jsx, DiscoverPage.jsx, Agent.md
+
+Starting: Diet.java
+Done: Diet.java
+Starting: ProfileRequest.java
+Done: ProfileRequest.java
+Starting: DiscoverFilterRequest.java
+Done: DiscoverFilterRequest.java
+Starting: ProfileSpecification.java
+Done: ProfileSpecification.java
+Starting: DiscoverService.java
+Done: DiscoverService.java
+Starting: ProfileForm.jsx
+Done: ProfileForm.jsx
+Starting: EditProfilePage.jsx
+Done: EditProfilePage.jsx
+Starting: ProfileDetailPage.jsx
+Done: ProfileDetailPage.jsx
+Starting: FilterPopup.jsx
+Done: FilterPopup.jsx
+Starting: DiscoverPage.jsx
+Done: DiscoverPage.jsx
+Starting: Agent.md
+Done: Agent.md
+
+Feature: Custom OTP email templates (Registration, Password Reset, Deletion), Clickable brand logo, SVG Lotus icon fix, Compass Discover icon, Masked contact number with info button
+Questions asked: None
+Answers given: N/A
+Plan: EmailTemplateUtil.java, EmailService.java, OtpService.java, AuthService.java, ProfileService.java, Navbar.jsx, DiscoverPage.jsx, ProfileDetailPage.jsx, Agent.md
+
+Starting: EmailTemplateUtil.java
+Done: EmailTemplateUtil.java
+Starting: EmailService.java
+Done: EmailService.java
+Starting: OtpService.java
+Done: OtpService.java
+Starting: AuthService.java
+Done: AuthService.java
+Starting: ProfileService.java
+Done: ProfileService.java
+Starting: Navbar.jsx
+Done: Navbar.jsx
+Starting: DiscoverPage.jsx
+Done: DiscoverPage.jsx
+Starting: ProfileDetailPage.jsx
+Done: ProfileDetailPage.jsx
+Starting: Agent.md
+Done: Agent.md
+
+
+
+
+
 
 
 

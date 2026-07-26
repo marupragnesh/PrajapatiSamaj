@@ -37,16 +37,41 @@ public class EmailService {
     private String fromEmail;
 
     /**
-     * Send OTP email for Forgot Password flow.
-     *
-     * @param toEmail recipient's email
-     * @param otp     the 6-digit OTP code
+     * Send OTP email for Account Registration flow.
      */
     @Async
-    public void sendOtpEmail(String toEmail, String otp) {
+    public void sendRegistrationOtpEmail(String toEmail, String otp) {
+        String subject = "Your Registration OTP - Prajapati Samaj Matrimonial";
+        String body = emailTemplateUtil.buildRegistrationEmail(otp);
+        sendHtmlEmail(toEmail, subject, body);
+    }
+
+    /**
+     * Send OTP email for Forgot Password flow.
+     */
+    @Async
+    public void sendForgotPasswordOtpEmail(String toEmail, String otp) {
         String subject = "Your OTP for Password Reset - Prajapati Samaj Matrimonial";
         String body = emailTemplateUtil.buildForgotPasswordEmail(otp);
         sendHtmlEmail(toEmail, subject, body);
+    }
+
+    /**
+     * Send OTP email for Account Deletion flow.
+     */
+    @Async
+    public void sendAccountDeletionOtpEmail(String toEmail, String otp) {
+        String subject = "Account Deletion OTP - Prajapati Samaj Matrimonial";
+        String body = emailTemplateUtil.buildAccountDeletionEmail(otp);
+        sendHtmlEmail(toEmail, subject, body);
+    }
+
+    /**
+     * Legacy helper method.
+     */
+    @Async
+    public void sendOtpEmail(String toEmail, String otp) {
+        sendForgotPasswordOtpEmail(toEmail, otp);
     }
 
     /**

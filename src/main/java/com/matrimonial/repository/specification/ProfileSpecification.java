@@ -37,9 +37,13 @@ public class ProfileSpecification {
             // 2. Mandatory: Exclude logged-in user
             predicates.add(criteriaBuilder.notEqual(root.get("user").get("id"), currentUserId));
 
-            // 3. Gender preference filter (if specified and not ANY)
-            if (preferredGender != null) {
-                predicates.add(criteriaBuilder.equal(root.get("gender"), preferredGender));
+            // 3. Gender preference filter (if specified via filter or partner preference)
+            Profile.Gender genderToFilter = (filter != null && filter.getGender() != null)
+                    ? filter.getGender()
+                    : preferredGender;
+
+            if (genderToFilter != null) {
+                predicates.add(criteriaBuilder.equal(root.get("gender"), genderToFilter));
             }
 
             // 4. Optional filters from DiscoverFilterRequest

@@ -8,6 +8,7 @@ package com.matrimonial.entity.enums;
  */
 public enum Diet {
     VEG,
+    VEG_EGG,
     NON_VEG,
     VEGAN
 }

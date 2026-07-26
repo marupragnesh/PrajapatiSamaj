@@ -1,5 +1,6 @@
 package com.matrimonial.dto.request;
 
+import com.matrimonial.entity.Profile.Gender;
 import com.matrimonial.entity.enums.Diet;
 import com.matrimonial.entity.enums.MaritalStatus;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DiscoverFilterRequest {
 
+    private Gender gender;
     private Integer minAge;
     private Integer maxAge;
     private MaritalStatus maritalStatus;

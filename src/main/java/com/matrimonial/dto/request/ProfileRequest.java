@@ -60,11 +60,9 @@ public class ProfileRequest {
     @Pattern(regexp = "^[0-9]{6}$", message = "Enter a valid 6-digit pincode")
     private String pincode;
 
-    @NotBlank(message = "Education is required")
     @Size(max = 150, message = "Education must not exceed 150 characters")
     private String education;
 
-    @NotBlank(message = "Profession is required")
     @Size(max = 150, message = "Profession must not exceed 150 characters")
     private String profession;
 
@@ -79,7 +77,8 @@ public class ProfileRequest {
     @Size(max = 100, message = "Gotra must not exceed 100 characters")
     private String gotra;
 
-    private Diet diet;             // VEG, NON_VEG, VEGAN
+    @NotNull(message = "Diet is required")
+    private Diet diet;             // VEG, VEG_EGG, NON_VEG, VEGAN
 
     @Size(max = 100, message = "Religion must not exceed 100 characters")
     private String religion;

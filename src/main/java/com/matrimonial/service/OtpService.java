@@ -37,21 +37,20 @@ public class OtpService {
     @Value("${otp.expiry.minutes}")
     private int otpExpiryMinutes;
 
+    public enum OtpPurpose {
+        REGISTRATION,
+        FORGOT_PASSWORD,
+        ACCOUNT_DELETION
+    }
+
     /**
-     * Generate a new OTP, save it to DB, and send it via email.
-     *
-     * @param email the user's email to send OTP to
+     * Generate a new OTP, save it to DB, and send it via email based on purpose.
      */
     @Transactional
-    public void generateAndSendOtp(String email) {
-
-        // Generate random 6-digit OTP
+    public void generateAndSendOtp(String email, OtpPurpose purpose) {
         String otp = otpUtil.generateOtp();
-
-        // Set expiry time (now + 10 minutes)
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(otpExpiryMinutes);
 
-        // Save OTP to DB
         OtpToken otpToken = OtpToken.builder()
                 .email(email)
                 .otpCode(otp)
@@ -61,10 +60,21 @@ public class OtpService {
 
         otpRepository.save(otpToken);
 
-        log.info("OTP generated and saved for email={}", email);
+        log.info("OTP generated and saved for email={}, purpose={}", email, purpose);
 
-        // Send OTP via email
-        emailService.sendOtpEmail(email, otp);
+        switch (purpose) {
+            case REGISTRATION -> emailService.sendRegistrationOtpEmail(email, otp);
+            case ACCOUNT_DELETION -> emailService.sendAccountDeletionOtpEmail(email, otp);
+            default -> emailService.sendForgotPasswordOtpEmail(email, otp);
+        }
+    }
+
+    /**
+     * Legacy helper method.
+     */
+    @Transactional
+    public void generateAndSendOtp(String email) {
+        generateAndSendOtp(email, OtpPurpose.FORGOT_PASSWORD);
     }
 
     /**
