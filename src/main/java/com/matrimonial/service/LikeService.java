@@ -89,10 +89,12 @@ public class LikeService {
 
         likeRepository.save(like);
 
-        // Send email notification to receiver (async — won't delay response)
-        Profile senderProfile = profileRepository.findByUserId(sender.getId()).orElse(null);
-        String senderName = (senderProfile != null) ? senderProfile.getFullName() : "Someone";
-        emailService.sendLikeNotification(receiver.getEmail(), senderName);
+        // Send email notification to receiver if enabled (async — won't delay response)
+        if (Boolean.TRUE.equals(receiver.getEmailOnLike())) {
+            Profile senderProfile = profileRepository.findByUserId(sender.getId()).orElse(null);
+            String senderName = (senderProfile != null) ? senderProfile.getFullName() : "Someone";
+            emailService.sendLikeNotification(receiver.getEmail(), senderName);
+        }
     }
 
     /**

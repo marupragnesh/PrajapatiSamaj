@@ -54,6 +54,7 @@ D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\repository\LikeReposito
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\service\DiscoverService.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\controller\StatsController.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\OrderResponse.java
+D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\NotificationSettingsDto.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\response\LikerSafeView.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\entity\Like.java
 D:\Projects\PrajapatiSamaj\src\main\java\com\matrimonial\dto\request\ResetPasswordRequest.java

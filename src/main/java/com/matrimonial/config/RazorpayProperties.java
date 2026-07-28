@@ -24,12 +24,12 @@ public class RazorpayProperties {
     /**
      * Razorpay Key ID (mapped from razorpay.key.id)
      */
-    @Value("${razorpay.key.id:}")
+    @Value("${razorpay.key.id:rzp_live_TGDrNaRk9Rvs0Z}")
     private String id;
 
     /**
      * Razorpay Key Secret (mapped from razorpay.key.secret)
      */
-    @Value("${razorpay.key.secret:}")
+    @Value("${razorpay.key.secret:fP8L1WxySY6mAIjxoEg7zQpr}")
     private String secret;
 }

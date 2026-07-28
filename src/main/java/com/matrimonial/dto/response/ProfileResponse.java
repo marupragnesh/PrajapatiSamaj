@@ -71,6 +71,10 @@ public class ProfileResponse {
     private Boolean isComplete;
 
 
+    // Interaction status relative to logged-in viewer
+    private Boolean isLikedByMe;       // true if viewer already liked this profile
+    private String interestStatus;      // NONE, PENDING_SENT, PENDING_RECEIVED, ACCEPTED, DECLINED
+
     // List of photos — each has photoId, photoUrl, isPrimary
     private List<PhotoDto> photos;
 

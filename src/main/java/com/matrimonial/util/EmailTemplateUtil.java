@@ -112,6 +112,8 @@ public class EmailTemplateUtil {
                     <h2 style="color: #d63031;">Prajapati Samaj Matrimonial</h2>
                     <p>Good news! <strong>%s</strong> liked your profile. 💛</p>
                     <p>Log in to view their profile and send an interest request.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+                    <p style="font-size: 11px; color: #888;">Don't want to receive these email notifications? You can manage your email preferences in Profile Settings.</p>
                     <br/>
                     <p>Regards,<br/>Prajapati Samaj Team</p>
                   </div>
@@ -134,6 +136,8 @@ public class EmailTemplateUtil {
                     <h2 style="color: #d63031;">Prajapati Samaj Matrimonial</h2>
                     <p><strong>%s</strong> has sent you an interest request. 🌟</p>
                     <p>Log in to Accept or Decline this request.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+                    <p style="font-size: 11px; color: #888;">Don't want to receive these email notifications? You can manage your email preferences in Profile Settings.</p>
                     <br/>
                     <p>Regards,<br/>Prajapati Samaj Team</p>
                   </div>
@@ -156,6 +160,8 @@ public class EmailTemplateUtil {
                     <h2 style="color: #d63031;">Prajapati Samaj Matrimonial</h2>
                     <p>Congratulations! 🎉 <strong>%s</strong> has accepted your interest request.</p>
                     <p>Log in to view your matches.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
+                    <p style="font-size: 11px; color: #888;">Don't want to receive these email notifications? You can manage your email preferences in Profile Settings.</p>
                     <br/>
                     <p>Regards,<br/>Prajapati Samaj Team</p>
                   </div>
@@ -164,3 +170,4 @@ public class EmailTemplateUtil {
                 """.formatted(acceptorName);
     }
 }
+

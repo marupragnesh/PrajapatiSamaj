@@ -5,6 +5,7 @@ import com.matrimonial.dto.request.PreferenceRequest;
 import com.matrimonial.dto.request.ProfileRequest;
 import com.matrimonial.dto.response.ApiResponse;
 import com.matrimonial.dto.response.ExpectationResponse;
+import com.matrimonial.dto.response.NotificationSettingsDto;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.PartnerPreference;
 import com.matrimonial.service.ProfileService;
@@ -175,6 +176,25 @@ public class ProfileController {
             @PathVariable Long profileId) {
         ProfileResponse response = profileService.getProfileById(profileId, userDetails.getUsername());
         return ResponseEntity.ok(response);
+    }
+
+    // ===== Notification Settings =====
+
+    /** Get logged-in user's email notification preferences. */
+    @GetMapping("/api/profile/notification-settings")
+    public ResponseEntity<NotificationSettingsDto> getNotificationSettings(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        NotificationSettingsDto settings = profileService.getNotificationSettings(userDetails.getUsername());
+        return ResponseEntity.ok(settings);
+    }
+
+    /** Update logged-in user's email notification preferences. */
+    @PutMapping("/api/profile/notification-settings")
+    public ResponseEntity<NotificationSettingsDto> updateNotificationSettings(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody NotificationSettingsDto request) {
+        NotificationSettingsDto settings = profileService.updateNotificationSettings(userDetails.getUsername(), request);
+        return ResponseEntity.ok(settings);
     }
 
     // ===== Account =====

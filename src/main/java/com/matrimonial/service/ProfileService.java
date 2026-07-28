@@ -4,6 +4,7 @@ import com.matrimonial.dto.request.ExpectationRequest;
 import com.matrimonial.dto.request.PreferenceRequest;
 import com.matrimonial.dto.request.ProfileRequest;
 import com.matrimonial.dto.response.ExpectationResponse;
+import com.matrimonial.dto.response.NotificationSettingsDto;
 import com.matrimonial.dto.response.ProfileResponse;
 import com.matrimonial.entity.*;
 import com.matrimonial.exception.BadRequestException;
@@ -24,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -200,7 +202,74 @@ public class ProfileService {
         }
 
         User viewer = getUserByEmail(viewerEmail);
-        return profileMapper.toProfileResponse(profile, false, viewer);
+        User targetUser = profile.getUser();
+
+        ProfileResponse response = profileMapper.toProfileResponse(profile, false, viewer);
+
+        // Check if viewer has liked targetUser
+        boolean isLiked = likeRepository.existsBySenderIdAndReceiverId(viewer.getId(), targetUser.getId());
+        response.setIsLikedByMe(isLiked);
+
+        // Determine interest request status between viewer and targetUser
+        String interestStatus = "NONE";
+        Optional<InterestRequest> sentInterest = interestRepository.findBySenderIdAndReceiverId(viewer.getId(), targetUser.getId());
+        if (sentInterest.isPresent()) {
+            InterestRequest.Status status = sentInterest.get().getStatus();
+            if (status == InterestRequest.Status.PENDING) {
+                interestStatus = "PENDING_SENT";
+            } else if (status == InterestRequest.Status.ACCEPTED) {
+                interestStatus = "ACCEPTED";
+            } else if (status == InterestRequest.Status.DECLINED) {
+                interestStatus = "DECLINED";
+            }
+        } else {
+            Optional<InterestRequest> receivedInterest = interestRepository.findBySenderIdAndReceiverId(targetUser.getId(), viewer.getId());
+            if (receivedInterest.isPresent()) {
+                InterestRequest.Status status = receivedInterest.get().getStatus();
+                if (status == InterestRequest.Status.PENDING) {
+                    interestStatus = "PENDING_RECEIVED";
+                } else if (status == InterestRequest.Status.ACCEPTED) {
+                    interestStatus = "ACCEPTED";
+                } else if (status == InterestRequest.Status.DECLINED) {
+                    interestStatus = "DECLINED";
+                }
+            }
+        }
+        response.setInterestStatus(interestStatus);
+
+        return response;
+    }
+
+    // ===== Email Notification Settings =====
+
+    public NotificationSettingsDto getNotificationSettings(String email) {
+        User user = getUserByEmail(email);
+        return NotificationSettingsDto.builder()
+                .emailOnLike(user.getEmailOnLike())
+                .emailOnInterest(user.getEmailOnInterest())
+                .emailOnAcceptInterest(user.getEmailOnAcceptInterest())
+                .build();
+    }
+
+    @Transactional
+    public NotificationSettingsDto updateNotificationSettings(String email, NotificationSettingsDto dto) {
+        User user = getUserByEmail(email);
+        if (dto.getEmailOnLike() != null) {
+            user.setEmailOnLike(dto.getEmailOnLike());
+        }
+        if (dto.getEmailOnInterest() != null) {
+            user.setEmailOnInterest(dto.getEmailOnInterest());
+        }
+        if (dto.getEmailOnAcceptInterest() != null) {
+            user.setEmailOnAcceptInterest(dto.getEmailOnAcceptInterest());
+        }
+        userRepository.save(user);
+        log.info("Notification settings updated for userId={}", user.getId());
+        return NotificationSettingsDto.builder()
+                .emailOnLike(user.getEmailOnLike())
+                .emailOnInterest(user.getEmailOnInterest())
+                .emailOnAcceptInterest(user.getEmailOnAcceptInterest())
+                .build();
     }
 
     // ===== Photos =====

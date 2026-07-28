@@ -47,6 +47,19 @@ public class User {
     @Builder.Default
     private Boolean isActive = true;
 
+    // Email notification preferences (opt-in by default)
+    @Column(name = "email_on_like", nullable = false)
+    @Builder.Default
+    private Boolean emailOnLike = true;
+
+    @Column(name = "email_on_interest", nullable = false)
+    @Builder.Default
+    private Boolean emailOnInterest = true;
+
+    @Column(name = "email_on_accept_interest", nullable = false)
+    @Builder.Default
+    private Boolean emailOnAcceptInterest = true;
+
     // Timestamp when the account was created
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

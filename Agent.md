@@ -101,6 +101,7 @@ com.matrimonial
 | 38 | Fix StatsController ApiResponse signature mismatch | ✅ Done | StatsController now returns ResponseEntity<StatsResponse> directly |
 | 39 | Total User Stats, Profile Accordions, Expectations Expansion & Email Fix | ✅ Done | Added total user count, collapsible profile page accordions, expanded expectation fields (State, Mangal/Shani, Weight), reordered About Developer page, & fixed Gmail SMTP SSL port 465 timeout |
 | 40 | Fix Delete Account FK Constraint Error | ✅ Done | Deletes payments associated with user prior to user entity deletion |
+| 41 | Email Unsubscribe Preferences, Profile Action UI States & Premium About Button | ✅ Done | Added notification settings (like, interest, accept interest email toggles), persistent Liked / Interest Sent / Accepted UI buttons on profile details, and subtle About & Stats button in Premium page |
 
 ---
 

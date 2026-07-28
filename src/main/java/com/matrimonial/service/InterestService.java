@@ -85,10 +85,12 @@ public class InterestService {
 
         interestRepository.save(interestRequest);
 
-        // Notify receiver via email (async)
-        Profile senderProfile = profileRepository.findByUserId(sender.getId()).orElse(null);
-        String senderName = (senderProfile != null) ? senderProfile.getFullName() : "Someone";
-        emailService.sendInterestNotification(receiver.getEmail(), senderName);
+        // Notify receiver via email if enabled (async)
+        if (Boolean.TRUE.equals(receiver.getEmailOnInterest())) {
+            Profile senderProfile = profileRepository.findByUserId(sender.getId()).orElse(null);
+            String senderName = (senderProfile != null) ? senderProfile.getFullName() : "Someone";
+            emailService.sendInterestNotification(receiver.getEmail(), senderName);
+        }
     }
 
     /**
@@ -123,10 +125,12 @@ public class InterestService {
         interest.setStatus(InterestRequest.Status.ACCEPTED);
         interestRepository.save(interest);
 
-        // Notify the sender that their interest was accepted (async)
-        Profile receiverProfile = profileRepository.findByUserId(receiver.getId()).orElse(null);
-        String receiverName = (receiverProfile != null) ? receiverProfile.getFullName() : "Someone";
-        emailService.sendInterestAcceptedNotification(interest.getSender().getEmail(), receiverName);
+        // Notify the sender that their interest was accepted if enabled (async)
+        if (Boolean.TRUE.equals(interest.getSender().getEmailOnAcceptInterest())) {
+            Profile receiverProfile = profileRepository.findByUserId(receiver.getId()).orElse(null);
+            String receiverName = (receiverProfile != null) ? receiverProfile.getFullName() : "Someone";
+            emailService.sendInterestAcceptedNotification(interest.getSender().getEmail(), receiverName);
+        }
     }
 
     /**
