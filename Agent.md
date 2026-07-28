@@ -103,6 +103,11 @@ com.matrimonial
 | 40 | Fix Delete Account FK Constraint Error | ✅ Done | Deletes payments associated with user prior to user entity deletion |
 | 41 | Email Unsubscribe Preferences, Profile Action UI States & Premium About Button | ✅ Done | Added notification settings (like, interest, accept interest email toggles), persistent Liked / Interest Sent / Accepted UI buttons on profile details, and subtle About & Stats button in Premium page |
 | 42 | Instagram-Style Photo Preview, Aspect Ratio & Crop Adjustment Modal | ✅ Done | Added multi-photo file manager selection, interactive HTML5 canvas cropping, 4:5/1:1/16:9/Original aspect ratios, zoom slider, 90° rotation, drag-to-pan repositioning, and multi-photo adjustment queue |
+| 43 | Modal Height Responsiveness & Per-Photo Save Crop Flow | ✅ Done | Constrained modal height to 94vh with compact canvas and scrollable controls to fit 100% standard browser zoom without cut off, added per-photo Save Aspect Ratio & Crop button with auto-disable/re-enable state & thumbnail checkmarks |
+| 44 | 60FPS High-Performance Image Adjustment Modal & Mobile Optimization | ✅ Done | Optimized canvas preview rendering using requestAnimationFrame, pre-cached Object URLs for thumbnail carousel, and added touch-action: none for zero-lag mobile touch dragging |
+| 45 | Profile Form Accordions (Default Closed), Remove Navbar About Link & 120FPS Canvas Engine | ✅ Done | Reorganized Edit Profile form into 6 default-closed collapsible accordions with auto-expand error handling, removed About/Stats link from Navbar, and upgraded photo adjust canvas engine with 120Hz high refresh rate sync |
+| 46 | SVG LogoIcon, Default Closed Profile Dropdowns & Mobile Bottom Navigation | ✅ Done | Replaced emoji logo with LogoIcon SVG emblem, set ProfileDetailPage section dropdowns to default-closed, and added mobile sticky bottom tab navigation bar |
+| 47 | 1:1 Canvas Export Precision & Profile Photo Aspect Ratio Display Fix | ✅ Done | Updated processCroppedFile scaleFactor calculation for pixel-perfect alignment with cropper box, and replaced fixed wide image container on ProfileDetailPage with flexible portrait-friendly viewer |
 
 ---
 
