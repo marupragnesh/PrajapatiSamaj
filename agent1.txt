@@ -547,5 +547,20 @@ Done: PaymentPage.jsx
 Starting: Agent.md
 Done: Agent.md
 
+Feature: Instagram-Style Image Preview, Aspect Ratio & Crop Adjustment Modal
+Questions asked: Default aspect ratio, Batch upload progress
+Answers given: Approved plan (Default 4:5 Portrait, multi-file queue)
+Plan: ImageAdjustModal.jsx, PhotoUpload.jsx, Agent.md
+Starting: ImageAdjustModal.jsx
+Done: ImageAdjustModal.jsx
+Starting: PhotoUpload.jsx
+Done: PhotoUpload.jsx
+Starting: Agent.md
+Done: Agent.md
+
+
+
+
+
 
 

@@ -102,6 +102,7 @@ com.matrimonial
 | 39 | Total User Stats, Profile Accordions, Expectations Expansion & Email Fix | ✅ Done | Added total user count, collapsible profile page accordions, expanded expectation fields (State, Mangal/Shani, Weight), reordered About Developer page, & fixed Gmail SMTP SSL port 465 timeout |
 | 40 | Fix Delete Account FK Constraint Error | ✅ Done | Deletes payments associated with user prior to user entity deletion |
 | 41 | Email Unsubscribe Preferences, Profile Action UI States & Premium About Button | ✅ Done | Added notification settings (like, interest, accept interest email toggles), persistent Liked / Interest Sent / Accepted UI buttons on profile details, and subtle About & Stats button in Premium page |
+| 42 | Instagram-Style Photo Preview, Aspect Ratio & Crop Adjustment Modal | ✅ Done | Added multi-photo file manager selection, interactive HTML5 canvas cropping, 4:5/1:1/16:9/Original aspect ratios, zoom slider, 90° rotation, drag-to-pan repositioning, and multi-photo adjustment queue |
 
 ---
 
